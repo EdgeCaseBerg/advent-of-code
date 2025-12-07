@@ -54,11 +54,17 @@ fn p2(raw_data: &str) {
     let mut beams = vec![s_location];
 
     for r in 1..rows {
+        for c in beams.iter() {
+            worldlines[r][*c] = max(worldlines[r - 1][*c], 1);
+        }
         for c in 0..cols {
+            if r == 4 && (c == 6 || c == 8) {
+                // println!("{:?}\n{:?}FOOOO", matrix[4], worldlines[4]);
+            }
             // A beam in the current list of beams has hit a splitter
             if matrix[r][c] == '^' && beams.contains(&c) {
                 let how_many_lead_to_this_beam = worldlines[r - 1][c];
-                println!("hmlttb {:?}", how_many_lead_to_this_beam);
+                // println!("hmlttb {:?} {:?}", how_many_lead_to_this_beam, c);
                 beams.retain(|idx| *idx != c);
                 if c > 0 {
                     beams.push(c - 1);
@@ -71,18 +77,39 @@ fn p2(raw_data: &str) {
                 beams.sort();
                 beams.dedup();
             } else if beams.contains(&c) {
-                worldlines[r][c] = worldlines[r - 1][c];
+                // this was resetig us from 1 1 to 1 0
+                // worldlines[r][c] = worldlines[r - 1][c];
+            }
+            if r == 4 && (c == 6 || c == 8) {
+                // println!("{:?}\n{:?}postfooo", matrix[4], worldlines[4]);
             }
         }
-        for c in beams.iter() {
-            worldlines[r][*c] = max(worldlines[r - 1][*c], 1);
-        }
+        
+        // if r == 4 {
+        //         // println!("{:?}", "FOUR");
+        //         for line in worldlines.iter() {
+        //             // println!("{:?}", line);
+        //         }
+        //     }
+
+        //     if r == 5  {
+        //         // println!("{:?}", "FIVE");
+        //         for line in worldlines.iter() {
+        //             // println!("{:?}", line);
+        //         }
+        //     }
+        //     if r == 6 {
+        //         // println!("{:?}", "SIX");
+        //         for line in worldlines.iter() {
+        //             // println!("{:?}", line);
+        //         }
+        //     }
     }
 
     // Now we must traverse the graph intelligently to count how many paths there are through it.
-    for line in worldlines {
-        println!("{:?}", line);
-    }
+    // for line in worldlines {
+    //    println!("{:?}", line);
+    // }
     /* Does this help me? Could I use it as input to myself to count unique paths in
        this "maze" ? Or does the fact that we have multiple 'exits' pose a problem to
        that idea
@@ -125,8 +152,8 @@ fn p2(raw_data: &str) {
         [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1]
 
      */
-    // let number_of_world_lines = microwave_banana(&matrix, rows, cols, 0, s_location);
-    // println!("{:?}", number_of_world_lines);
+    let number_of_world_lines = worldlines[rows - 1].clone().iter().sum::<usize>();
+    println!("{:?}", number_of_world_lines);
 }
 
 // fn microwave_banana(raw_data: &Vec<Vec<char>>, rows: usize, cols: usize, row: usize, col: usize) {
