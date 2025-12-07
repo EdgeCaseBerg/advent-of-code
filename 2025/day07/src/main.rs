@@ -1,11 +1,17 @@
 use std::fs;
 use std::cmp::max;
+use std::time::Instant;
 
 fn main() {
     let raw_data = fs::read_to_string("./input").expect("bad input data");
     let raw_data = raw_data.as_str();
+    let i = Instant::now();
     p1(raw_data);
+    println!("{:?}", i.elapsed());
+
+    let i = Instant::now();
     p2(raw_data);
+    println!("{:?}", i.elapsed());
 }
 
 fn p1(raw_data: &str) {
@@ -107,9 +113,9 @@ fn p2(raw_data: &str) {
     }
 
     // Now we must traverse the graph intelligently to count how many paths there are through it.
-    // for line in worldlines {
-    //    println!("{:?}", line);
-    // }
+    for line in &worldlines {
+       println!("{:?}", line);
+    }
     /* Does this help me? Could I use it as input to myself to count unique paths in
        this "maze" ? Or does the fact that we have multiple 'exits' pose a problem to
        that idea
@@ -134,25 +140,26 @@ fn p2(raw_data: &str) {
       how we count the actual timelines possible. Should each splitter keep track
       of how many routes lead into it? ... Let's consider it at each junction instead
       maybe.
-        [0, 0, 0, 0, 0, 0, 0, S, 0, 0, 0, 0, 0, 0, 0]
-        [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0]
-        [0, 0, 0, 0, 0, 0, 1, ^, 1, 0, 0, 0, 0, 0, 0]
-        [0, 0, 0, 0, 0, 1, ^, 2, ^, 1, 0, 0, 0, 0, 0]
-        [0, 0, 0, 0, 0, 1, 0, 2, 0, 1, 0, 0, 0, 0, 0]
-        [0, 0, 0, 0, 0, 1, 0, 2, 0, 1, 0, 0, 0, 0, 0]
-        [0, 0, 0, 0, 1, ^, 3, ^, 3, ^, 1, 0, 0, 0, 0]
-        [0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0]
-        [0, 0, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 0, 0]
-        [0, 0, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 0, 0]
-        [0, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 0]
-        [0, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 0]
-        [0, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0]
-        [0, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0]
-        [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1]
-        [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1]
+        [0, 0, 0, 0, 0 , 0, 0 , 1,  0, 0, 0, 0, 0, 0, 0]
+        [0, 0, 0, 0, 0 , 0, 0 , 1,  0, 0, 0, 0, 0, 0, 0]
+        [0, 0, 0, 0, 0 , 0, 1 , 1,  1, 0, 0, 0, 0, 0, 0]
+        [0, 0, 0, 0, 0 , 0, 1 , 0,  1, 0, 0, 0, 0, 0, 0]
+        [0, 0, 0, 0, 0 , 1, 1 , 2,  1, 1, 0, 0, 0, 0, 0]
+        [0, 0, 0, 0, 0 , 1, 0 , 2,  0, 1, 0, 0, 0, 0, 0]
+        [0, 0, 0, 0, 1 , 1, 3 , 2,  3, 1, 1, 0, 0, 0, 0]
+        [0, 0, 0, 0, 1 , 0, 3 , 0,  3, 0, 1, 0, 0, 0, 0]
+        [0, 0, 0, 1, 1 , 4, 3 , 3,  3, 1, 1, 1, 0, 0, 0]
+        [0, 0, 0, 1, 0 , 4, 0 , 3,  3, 1, 0, 1, 0, 0, 0]
+        [0, 0, 1, 1, 5 , 4, 4 , 3,  4, 1, 2, 1, 1, 0, 0]
+        [0, 0, 1, 0, 5 , 0, 4 , 3,  4, 0, 2, 0, 1, 0, 0]
+        [0, 1, 1, 1, 5 , 4, 4 , 7,  4, 0, 2, 1, 1, 1, 0]
+        [0, 1, 0, 1, 5 , 4, 0 , 7,  4, 0, 2, 1, 0, 1, 0]
+        [1, 1, 2, 1, 10, 4, 11, 7,  11, 0, 2, 1, 1, 1, 1]
+        [1, 0, 2, 0, 10, 0, 11, 0,  11, 0, 2, 1, 1, 0, 1]
+
 
      */
-    let number_of_world_lines = worldlines[rows - 1].clone().iter().sum::<usize>();
+    let number_of_world_lines = worldlines[rows - 1].iter().sum::<usize>();
     println!("{:?}", number_of_world_lines);
 }
 
