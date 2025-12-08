@@ -76,7 +76,14 @@ fn p1(raw_data: &str) {
         circuit_sizes.push(size);
     }
 
+    // Take the 3 largest circuits by size and multiply them for the answer
+    circuit_sizes.sort();
     println!("{:?}", circuit_sizes);
+    let mut result = 1;
+    for size in circuit_sizes.iter().rev().take(3) {
+        result *= size;
+    }
+    println!("{:?}", result);
     
 }
 
