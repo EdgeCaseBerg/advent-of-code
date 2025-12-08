@@ -104,34 +104,49 @@ fn p1(raw_data: &str) {
     // then we start adding in each edge
     let mut dsu = DSU::new(points.len());
     let mut added = 0;
-    let mut attempts = 0;
+    // let mut attempts = 0;
+    let mut merges = 0;
+    let mut final_merge: Option<(Tuple3, Tuple3)> = None;
     for (_, i, j) in edges {
+        // P1 code
         // this is 10 in the example, 1000 in the problem
         // and if you screw this up then you get the wrong number.
-        if attempts == num_connections {
+        // for part 2, we cease.
+        // if attempts == num_connections {
+        //     break;
+        // }
+        // attempts += 1;
+        let merged = dsu.union(i, j);
+        if merged {
+            merges += 1;
+        }
+        if merges == points.len() -1 {
+            final_merge = Some((points[i], points[j]));
             break;
         }
-        attempts += 1;
-        dsu.union(i, j);
     }
 
+    let final_merge = final_merge.expect("Didnt compute final merge?");
+    println!("final merge X {:?}", final_merge.0.0 * final_merge.1.0);
 
+
+    // P1 code
     // count each circuit's size
-    let mut sizes = Vec::new();
-    let mut seen = HashSet::new();
+    // let mut sizes = Vec::new();
+    // let mut seen = HashSet::new();
 
-    for i in 0..points.len() {
-        let root = dsu.find(i);
-        if seen.insert(root) {
-            sizes.push(dsu.size[root]);
-        }
-    }
+    // for i in 0..points.len() {
+    //     let root = dsu.find(i);
+    //     if seen.insert(root) {
+    //         sizes.push(dsu.size[root]);
+    //     }
+    // }
 
-    sizes.sort_by(|a, b| b.cmp(a));
-    let result = sizes[0] * sizes[1] * sizes[2];
+    // sizes.sort_by(|a, b| b.cmp(a));
+    // let result = sizes[0] * sizes[1] * sizes[2];
 
-    println!("Largest 3 circuits: {:?}", &sizes[..3]);
-    println!("Product: {}", result);
+    // println!("Largest 3 circuits: {:?}", &sizes[..3]);
+    // println!("Product: {}", result);
 }
 
 // for sorting purposes, squared and not squared work just fine.
