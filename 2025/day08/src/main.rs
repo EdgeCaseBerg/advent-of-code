@@ -1,5 +1,6 @@
 use std::fs;
 use std::time::Instant;
+use std::collections::{HashSet, HashMap};
 
 fn main() {
     let raw_data = fs::read_to_string("./input").expect("bad input data");
@@ -25,10 +26,34 @@ fn p1(raw_data: &str) {
             iter.next().expect("Option not defined z").parse::<PointType>().expect("Could not parse number z")
         )
     }).collect();
-    println!("{:?}", points);
-    let test_point = points[0];
-    for point in points.iter().skip(1) {
-        println!("{:?}", euclidean_distance(&test_point, point));
+    
+    let mut circuits: HashMap<Tuple3, HashSet<Tuple3>> = HashMap::new();
+    for point in &points {
+        let mut shortest_distance = PointType::MAX;
+        let mut point_with_shortest_distance = point;
+        for other_point in &points {
+            // We don't care about ourselves.
+            if point == other_point {
+                continue;
+            }
+            let d = euclidean_distance(point, other_point);
+            let connections = circuits.entry(*point).or_default();
+            let not_in_circuit_yet = !connections.contains(other_point);
+            if shortest_distance > d && not_in_circuit_yet {
+                shortest_distance = d;
+                point_with_shortest_distance = other_point;
+            }
+        }
+        if point != point_with_shortest_distance {
+            let mut connections = circuits.entry(*point).or_default();
+            connections.insert(*point_with_shortest_distance);
+        }
+    }
+
+    // We now have 1 connection between each item to its shortest distance neighbor
+    // so now we need to traverse each circuit and compute the three largest circuit
+    for circuit in circuits {
+        println!("{:?}", circuit);
     }
     
 }
