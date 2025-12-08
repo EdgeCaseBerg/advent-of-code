@@ -50,6 +50,8 @@ fn p1(raw_data: &str) {
         }
     }
 
+    println!("{:?}", circuits);
+
     // We now have 1 connection between each item to its shortest distance neighbor
     // so now we need to traverse each circuit and compute the three largest circuit
     let mut circuit_sizes = vec!();
@@ -57,14 +59,15 @@ fn p1(raw_data: &str) {
         let mut seen: HashSet<&Tuple3> = HashSet::new();
         let mut path = vec![start];
 
-        let mut size = 0;
+        let mut size = 1;
         while let Some(point) = path.pop() {
             seen.insert(point);
-            size += 1;
             match circuits.get(point) {
                 Some(connections) => {
                     for c in connections.iter() {
                         if !seen.contains(c) {
+                            println!("{:?} -> {:?}", point, c);
+                            size += 1;
                             path.push(&c);
                         }
                     }
