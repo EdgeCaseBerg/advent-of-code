@@ -17,7 +17,15 @@ fn main() {
     println!("Took: {:?}", time);
 }
 
-fn p1(_raw_data: &str) {
+fn p1(raw_data: &str) {
+    let tiles: Vec<(usize, usize)> = raw_data.lines().take_while(|line| !line.is_empty()).map(|line| {
+        let mut xy = line.split(",");
+        (
+            xy.next().expect("no digit x").parse().expect("bad number x"),
+            xy.next().expect("no digit y").parse().expect("bad number y")
+        )
+    }).collect();
+    println!("{:?}", tiles);
 }
 
 fn p2(_raw_data: &str) {
