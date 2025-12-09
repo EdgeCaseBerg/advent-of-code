@@ -101,10 +101,33 @@ fn p2(raw_data: &str) -> ResultType {
 
 
 /// Returns true if (x,y) is inside the polygon using the even–odd rule.
-/// 
-/// Search terms: "point in polygon even odd", "ray casting algorithm"
-pub fn point_in_poly(x: i64, y: i64, poly: &[(i64,i64)]) -> bool {
-    unimplemented!()
+/// The given x y is the scanline
+/// similar to stuff like https://wrfranklin.org/Research/Short_Notes/pnpoly.html
+pub fn point_in_poly(x: ResultType, y: ResultType, poly: &[(ResultType,ResultType)]) -> bool {
+    let mut inside = false;
+    let mut j = poly.len() - 1;
+
+    for i in 0..poly.len() {
+        let (ax, ay) = poly[i];
+        let (bx, by) = poly[j];
+
+        // Check if the test point is on a vertex
+        if x == ax && y == ay {
+            return true;
+        }
+
+        // Edge crosses scanline?
+        let intersects = (ay > y) != (by > y)
+            && x < (bx - ax) * (y - ay) / (by - ay) + ax;
+
+        if intersects {
+            inside = !inside;
+        }
+
+        j = i;
+    }
+
+    inside
 }
 
 /// Given a rectangle defined by two opposite corners rect1 and rect2,
