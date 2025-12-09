@@ -106,20 +106,46 @@ fn p2(raw_data: &str) -> ResultType {
     // we need to now fill the shape inside of it. This is the actual
     // hard part I suppose.
     // maybe https://en.wikipedia.org/wiki/Point_in_polygon ?
-    let mut start_point = red_tiles[0].clone();
-    let mut crossed = 0;
-    // cast a "ray" from 0,0 to the point
-    for x in 0..=max_x {
-        for y in 0..=max_y {
-            if green_tiles.contains(&(x,y)) {
-                crossed += 1;
-                if (crossed % 2 == 0) {
-                    start_point = (x,y - 1);
+    // let mut start_point = red_tiles[0].clone();
+    // let mut crossed = 0;
+    // // cast a "ray" from 0,0 to the point
+    // for x in 0..=max_x {
+    //     for y in 0..=max_y {
+    //         if green_tiles.contains(&(x,y)) {
+    //             crossed += 1;
+    //             if (crossed % 2 == 0) {
+    //                 start_point = (x,y - 1);
+    //             }
+    //         }
+    //     }
+    // }
+    // just choose one based roughtly on the loop connection and guesswork
+    let start_point = (97713,51514);
+    println!("Seeding at {:?}", start_point);
+    let mut queue = Vec::new();
+    queue.push(start_point);
+    while let Some(tile) = queue.pop() {
+        for dx in -1..=1 {
+            for dy in -1..=1 {
+                let new_tile = (tile.0 + dx, tile.1 + dy);
+                if new_tile.0 < min_x || new_tile.0 > max_x {
+                    println!("bad seed");
+                    continue;
+                }
+                if new_tile.1 < min_y || new_tile.1 > max_y {
+                    println!("bad seed");
+                    continue;
+                }
+                if green_tiles.contains(&new_tile) {
+                    continue;
+                } else {
+                    green_tiles.insert(new_tile.clone());
+                    queue.push(new_tile.clone());
+                    // println!("{:?}", new_tile);
                 }
             }
         }
     }
-    println!("Seeding at {:?}", start_point);
 
 
 
