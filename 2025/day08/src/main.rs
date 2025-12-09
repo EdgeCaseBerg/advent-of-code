@@ -52,7 +52,6 @@ fn p1(raw_data: &str) {
     // The DSU starts with a single point.
     // then we start adding in each edge
     let mut dsu = DSU::new(points.len());
-    let mut added = 0;
     let mut attempts = 0;
     for (_, i, j) in edges {
         if attempts == num_connections {
@@ -136,16 +135,10 @@ impl DSU {
         self.size[a] += self.size[b];
         true
     }
-
-    fn component_size(&mut self, x: usize) -> usize {
-        let root = self.find(x);
-        self.size[root]
-    }
 }
 
 
 fn p2(raw_data: &str) {
-    let num_connections = 1000;
     let points: Vec<Tuple3> = raw_data.lines().take_while(|line| !line.is_empty()).map(|line| {
         let mut iter = line.split(",");
         (
@@ -155,8 +148,6 @@ fn p2(raw_data: &str) {
         )
     }).collect();
     
-    let mut circuits: HashMap<Tuple3, HashSet<Tuple3>> = HashMap::new();
-
     // Step 1: map points to indices
     let mut index = HashMap::<Tuple3, usize>::new();
     for (i, p) in points.iter().enumerate() {
@@ -181,8 +172,6 @@ fn p2(raw_data: &str) {
     // The DSU starts with a single point.
     // then we start adding in each edge
     let mut dsu = DSU::new(points.len());
-    let mut added = 0;
-    // let mut attempts = 0;
     let mut merges = 0;
     let mut final_merge: Option<(Tuple3, Tuple3)> = None;
     for (_, i, j) in edges {
