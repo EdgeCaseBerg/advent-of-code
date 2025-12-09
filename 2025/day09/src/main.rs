@@ -42,6 +42,42 @@ fn p1(raw_data: &str) -> ResultType {
     *areas.iter().rev().take(1).next().expect("No answer")
 }
 
-fn p2(_raw_data: &str) {
+fn p2(raw_data: &str) {
+    let red_tiles: Vec<(ResultType, ResultType)> = raw_data.lines().take_while(|line| !line.is_empty()).map(|line| {
+        let mut xy = line.split(",");
+        (
+            xy.next().expect("no digit x").parse().expect("bad number x"),
+            xy.next().expect("no digit y").parse().expect("bad number y")
+        )
+    }).collect();
+
+    let mut green_tiles = vec![];
+    let n = red_tiles.len();
+    // don't forget the edges.
+    for i in 0..n {
+        let first = red_tiles[i];
+
+        let second = if i + 1 != n {
+            red_tiles[i + 1]
+        } else {
+            red_tiles[0]
+        };
+
+        // there is a green STRAIGHT line between these two points.
+        let bx = first.0.min(second.0);
+        let bxMax = first.0.max(second.0);
+        let by = first.1.min(second.1);
+        let byMax = first.1.max(second.1);
+        for x in bx..=bxMax {
+            for y in by..=byMax {
+                // we technically count the red tiles as green, but that doesn't matter.
+                green_tiles.push((x, y));
+            }
+        }
+    }
+
+    println!("GREEN{:?}", green_tiles);
+
+
 }
 
