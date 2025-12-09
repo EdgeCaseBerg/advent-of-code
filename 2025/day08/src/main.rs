@@ -2,16 +2,17 @@ use std::fs;
 use std::time::Instant;
 use std::collections::{HashSet, HashMap};
 
+// This is the trick: https://en.wikipedia.org/wiki/Kruskal%27s_algorithm
 fn main() {
     let raw_data = fs::read_to_string("./input").expect("bad input data");
     let raw_data = raw_data.as_str();
     let i = Instant::now();
     p1(raw_data);
-    println!("{:?}", i.elapsed());
+    println!("Took: {:?}", i.elapsed());
 
     let i = Instant::now();
     p2(raw_data);
-    println!("{:?}", i.elapsed());
+    println!("Took: {:?}", i.elapsed());
 }
 
 type PointType = i128;
@@ -28,58 +29,6 @@ fn p1(raw_data: &str) {
         )
     }).collect();
     
-    let mut circuits: HashMap<Tuple3, HashSet<Tuple3>> = HashMap::new();
-    // It's not the pairwise of shortest distances! ...
-    // for point in &points {
-    //     let mut shortest_distance = PointType::MAX;
-    //     let mut point_with_shortest_distance = point;
-    //     for other_point in &points {
-    //         // We don't care about ourselves.
-    //         if point == other_point {
-    //             continue;
-    //         }
-    //         let d = euclidean_distance_squared(point, other_point);
-    //         let connections = circuits.entry(*point).or_default();
-    //         let not_in_circuit_yet = !connections.contains(other_point);
-    //         if shortest_distance > d && not_in_circuit_yet {
-    //             shortest_distance = d;
-    //             point_with_shortest_distance = other_point;
-    //         }
-    //     }
-    //     if point != point_with_shortest_distance {
-    //         let connections = circuits.entry(*point).or_default();
-    //         connections.insert(*point_with_shortest_distance);
-    //     }
-    // }
-    // // We now have 1 connection between each item to its shortest distance neighbor
-    // // so now we need to traverse each circuit and compute the three largest circuit
-    // let mut circuit_sizes = vec!();
-    // for (start, _) in &circuits {
-    //     let mut seen: HashSet<&Tuple3> = HashSet::new();
-    //     let mut path = vec![start];
-
-    //     let mut size = 1;
-    //     while let Some(point) = path.pop() {
-    //         seen.insert(point);
-    //         match circuits.get(point) {
-    //             Some(connections) => {
-    //                 for c in connections.iter() {
-    //                     if !seen.contains(c) {
-    //                         println!("{:?} -> {:?}", point, c);
-    //                         size += 1;
-    //                         path.push(&c);
-    //                     }
-    //                 }
-    //             },
-    //             None => ()
-    //         };
-            
-    //     }
-    //     circuit_sizes.push(size);
-    // }
-    // ... its supposed to be a global list of shortest distances between pairs
-
-    // Step 1: map points to indices
     let mut index = HashMap::<Tuple3, usize>::new();
     for (i, p) in points.iter().enumerate() {
         index.insert(*p, i);
@@ -104,49 +53,32 @@ fn p1(raw_data: &str) {
     // then we start adding in each edge
     let mut dsu = DSU::new(points.len());
     let mut added = 0;
-    // let mut attempts = 0;
-    let mut merges = 0;
-    let mut final_merge: Option<(Tuple3, Tuple3)> = None;
+    let mut attempts = 0;
     for (_, i, j) in edges {
-        // P1 code
-        // this is 10 in the example, 1000 in the problem
-        // and if you screw this up then you get the wrong number.
-        // for part 2, we cease.
-        // if attempts == num_connections {
-        //     break;
-        // }
-        // attempts += 1;
-        let merged = dsu.union(i, j);
-        if merged {
-            merges += 1;
-        }
-        if merges == points.len() -1 {
-            final_merge = Some((points[i], points[j]));
+        if attempts == num_connections {
             break;
+        }
+        attempts += 1;
+        dsu.union(i, j);
+    }
+
+
+    // count each circuit's size
+    let mut sizes = Vec::new();
+    let mut seen = HashSet::new();
+
+    for i in 0..points.len() {
+        let root = dsu.find(i);
+        if seen.insert(root) {
+            sizes.push(dsu.size[root]);
         }
     }
 
-    let final_merge = final_merge.expect("Didnt compute final merge?");
-    println!("final merge X {:?}", final_merge.0.0 * final_merge.1.0);
+    sizes.sort_by(|a, b| b.cmp(a));
+    let result = sizes[0] * sizes[1] * sizes[2];
 
-
-    // P1 code
-    // count each circuit's size
-    // let mut sizes = Vec::new();
-    // let mut seen = HashSet::new();
-
-    // for i in 0..points.len() {
-    //     let root = dsu.find(i);
-    //     if seen.insert(root) {
-    //         sizes.push(dsu.size[root]);
-    //     }
-    // }
-
-    // sizes.sort_by(|a, b| b.cmp(a));
-    // let result = sizes[0] * sizes[1] * sizes[2];
-
-    // println!("Largest 3 circuits: {:?}", &sizes[..3]);
-    // println!("Product: {}", result);
+    println!("Largest 3 circuits: {:?}", &sizes[..3]);
+    println!("Product: {}", result);
 }
 
 // for sorting purposes, squared and not squared work just fine.
@@ -212,5 +144,59 @@ impl DSU {
 }
 
 
+fn p2(raw_data: &str) {
+    let num_connections = 1000;
+    let points: Vec<Tuple3> = raw_data.lines().take_while(|line| !line.is_empty()).map(|line| {
+        let mut iter = line.split(",");
+        (
+            iter.next().expect("Option not defined x").parse::<PointType>().expect("Could not parse number x"),
+            iter.next().expect("Option not defined y").parse::<PointType>().expect("Could not parse number y"),
+            iter.next().expect("Option not defined z").parse::<PointType>().expect("Could not parse number z")
+        )
+    }).collect();
+    
+    let mut circuits: HashMap<Tuple3, HashSet<Tuple3>> = HashMap::new();
 
-fn p2(_raw_data: &str) {}
+    // Step 1: map points to indices
+    let mut index = HashMap::<Tuple3, usize>::new();
+    for (i, p) in points.iter().enumerate() {
+        index.insert(*p, i);
+    }
+
+    // Treat tuple connections as graph edges
+    let mut edges = vec![];
+    for (i, a) in points.iter().enumerate() {
+        for (j, b) in points.iter().enumerate().skip(i + 1) {
+            edges.push((euclidean_distance_squared(a, b), i, j));
+        }
+    }
+
+    // And sort it all by distance
+    edges.sort_by(|a, b| {
+        a.0.cmp(&b.0)
+            .then_with(|| points[a.1].cmp(&points[b.1]))
+            .then_with(|| points[a.2].cmp(&points[b.2]))
+    });
+
+    // The DSU starts with a single point.
+    // then we start adding in each edge
+    let mut dsu = DSU::new(points.len());
+    let mut added = 0;
+    // let mut attempts = 0;
+    let mut merges = 0;
+    let mut final_merge: Option<(Tuple3, Tuple3)> = None;
+    for (_, i, j) in edges {
+        let merged = dsu.union(i, j);
+        if merged {
+            merges += 1;
+        }
+        if merges == points.len() -1 {
+            final_merge = Some((points[i], points[j]));
+            break;
+        }
+    }
+
+    let final_merge = final_merge.expect("Didnt compute final merge?");
+    println!("final merge X {:?}", final_merge.0.0 * final_merge.1.0);
+}
+
