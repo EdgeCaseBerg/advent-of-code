@@ -51,52 +51,7 @@ fn p2(raw_data: &str) -> ResultType {
             xy.next().expect("no digit y").parse().expect("bad number y")
         )
     }).collect();
-
-    let mut max_area = 0;
-    for p1 in &red_tiles {
-        for  p2 in &red_tiles {
-            if p1 == p2 {
-                continue;
-            }
-
-            let left   = min(p1.0, p2.0);
-            let right  = max(p1.0, p2.0);
-            let top    = min(p1.1, p2.1);
-            let bottom = max(p1.1, p2.1);
-
-            // are the corners inside of the polygon?
-            if !(
-                point_in_poly(left, top, &red_tiles) &&
-                point_in_poly(left, bottom, &red_tiles) &&
-                point_in_poly(right, top, &red_tiles) &&
-                point_in_poly(right, bottom, &red_tiles)
-            ) {
-                continue;
-            }
-
-
-            // 
-            let mut blocked = false;
-            for i in 0..red_tiles.len() {
-                let a = red_tiles[i];
-                let b = red_tiles[(i+1) % red_tiles.len()];
-                if adjacent_edge_intersects(( (left, top), (right, bottom) ), (a,b)) {
-                    blocked = true;
-                    break;
-                }
-            }
-            if blocked { 
-                continue; 
-            }
-
-            let area = (1 + (p1.0 - p2.0).abs()) * (1 + (p1.1 - p2.1).abs());
-            if area > max_area {
-                max_area = area;
-            }
-        }
-    }
-
-    max_area
+    largest_valid_rectangle(&red_tiles)
 }
 
 
@@ -174,35 +129,57 @@ pub fn adjacent_edge_intersects(
     false
 }
 
-/// Checks if the axis-aligned rectangle between p1 and p2 is valid:
-/// - All four corners are inside the polygon (even–odd rule)
-/// - No polygon edge intersects the interior of the rectangle
-///
-/// Search terms:
-/// "axis aligned rectangle interior test"
-/// "polygon edge vs bounding box intersection"
-pub fn is_rectangle_valid(
-    p1: (ResultType,ResultType),
-    p2: (ResultType,ResultType),
-    poly: &[(ResultType,ResultType)],
-    adjacency_edges: &[((ResultType,ResultType),(ResultType,ResultType))],
-) -> bool {
-    unimplemented!()
-}
-
 /// plus 1 to deal with the grid nature of things. a single line still has area of 1
 pub fn rectangle_area(p1: (ResultType,ResultType), p2: (ResultType,ResultType)) -> ResultType {
     (1 + (p1.0 - p2.0).abs()) * (1 + (p1.1 - p2.1).abs())
 }
 
-/// Iterates over all pairs of red tiles and returns the largest valid
-/// rectangle area.
-///
-/// Search terms:
-/// "pairwise iteration", "combinatorics n^2 pair generation",
-/// "filter + max element"
-pub fn largest_valid_rectangle(poly: &[(i64,i64)]) -> i64 {
-    unimplemented!()
+pub fn largest_valid_rectangle(red_tiles: &[(ResultType,ResultType)]) -> ResultType {
+    let mut max_area = 0;
+    for p1 in red_tiles {
+        for  p2 in red_tiles {
+            if p1 == p2 {
+                continue;
+            }
+
+            let left   = min(p1.0, p2.0);
+            let right  = max(p1.0, p2.0);
+            let top    = min(p1.1, p2.1);
+            let bottom = max(p1.1, p2.1);
+
+            // are the corners inside of the polygon?
+            if !(
+                point_in_poly(left, top, red_tiles) &&
+                point_in_poly(left, bottom, red_tiles) &&
+                point_in_poly(right, top, red_tiles) &&
+                point_in_poly(right, bottom, red_tiles)
+            ) {
+                continue;
+            }
+
+
+            // 
+            let mut blocked = false;
+            for i in 0..red_tiles.len() {
+                let a = red_tiles[i];
+                let b = red_tiles[(i+1) % red_tiles.len()];
+                if adjacent_edge_intersects(( (left, top), (right, bottom) ), (a,b)) {
+                    blocked = true;
+                    break;
+                }
+            }
+            if blocked { 
+                continue; 
+            }
+
+            let area = (1 + (p1.0 - p2.0).abs()) * (1 + (p1.1 - p2.1).abs());
+            if area > max_area {
+                max_area = area;
+            }
+        }
+    }
+
+    max_area
 }
 
 
