@@ -152,21 +152,17 @@ pub fn adjacent_edge_intersects(
 /// "axis aligned rectangle interior test"
 /// "polygon edge vs bounding box intersection"
 pub fn is_rectangle_valid(
-    p1: (i64,i64),
-    p2: (i64,i64),
-    poly: &[(i64,i64)],
-    adjacency_edges: &[((i64,i64),(i64,i64))],
+    p1: (ResultType,ResultType),
+    p2: (ResultType,ResultType),
+    poly: &[(ResultType,ResultType)],
+    adjacency_edges: &[((ResultType,ResultType),(ResultType,ResultType))],
 ) -> bool {
     unimplemented!()
 }
 
-/// Computes the geometric area of the rectangle defined by p1 and p2.
-/// NOTE: NO +1 terms. This puzzle uses dx * dy.
-///
-/// Search terms:
-/// "geometry compute rectangular area from two points"
-pub fn rectangle_area(p1: (i64,i64), p2: (i64,i64)) -> i64 {
-    unimplemented!()
+/// plus 1 to deal with the grid nature of things. a single line still has area of 1
+pub fn rectangle_area(p1: (ResultType,ResultType), p2: (ResultType,ResultType)) -> ResultType {
+    (1 + (p1.0 - p2.0).abs()) * (1 + (p1.1 - p2.1).abs())
 }
 
 /// Iterates over all pairs of red tiles and returns the largest valid
@@ -224,7 +220,7 @@ mod tests {
         let p1 = (2,3);
         let p2 = (9,5);
 
-        assert_eq!(rectangle_area(p1, p2), 14); // dx=7, dy=2 → 14
+        assert_eq!(rectangle_area(p1, p2), 24);
     }
 
     #[test]
