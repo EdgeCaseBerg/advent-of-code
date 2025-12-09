@@ -51,7 +51,18 @@ fn p2(raw_data: &str) -> ResultType {
             xy.next().expect("no digit y").parse().expect("bad number y")
         )
     }).collect();
+    println!("{:?}", "going red...");
 
+
+    // Pre-compute the bounding box around the grid so that we can easily tell what is
+    // "outside" versus "inside" so that we can start inside and flood in the right
+    // direction.
+    let mut min_x = ResultType::MAX;
+    let mut max_x = ResultType::MIN;
+    let mut min_y = ResultType::MAX;
+    let mut max_y = ResultType::MIN;
+
+    println!("{:?}", "going green...");
     let mut green_tiles = HashSet::new();
     let n = red_tiles.len();
     // Time to draw straight lines of green between red tiles.
@@ -76,11 +87,41 @@ fn p2(raw_data: &str) -> ResultType {
                 green_tiles.insert((x, y));
             }
         }
+
+        // running precompute.
+        if min_x > bx {
+            min_x = bx;
+        }
+        if max_x < bxMax {
+            max_x = bxMax;
+        }
+        if min_y > by {
+            min_y = by;
+        }
+        if max_y < byMax {
+            max_y = byMax;
+        }
     }
     // But we're not done yet. We have completed the shape, and thus
     // we need to now fill the shape inside of it. This is the actual
     // hard part I suppose.
-    println!("GREEN{:?}", green_tiles);
+    // maybe https://en.wikipedia.org/wiki/Point_in_polygon ?
+    let mut start_point = red_tiles[0].clone();
+    let mut crossed = 0;
+    // cast a "ray" from 0,0 to the point
+    for x in 0..=max_x {
+        for y in 0..=max_y {
+            if green_tiles.contains(&(x,y)) {
+                crossed += 1;
+                if (crossed % 2 == 0) {
+                    start_point = (x,y - 1);
+                }
+            }
+        }
+    }
+    println!("Seeding at {:?}", start_point);
+
+
 
     let mut areas = vec![];
     for p1 in red_tiles.iter() {
@@ -114,7 +155,7 @@ fn p2(raw_data: &str) -> ResultType {
                 break;
             }
         }
-        println!("{:?} {:?} {:?} {:?} {:?}", is_green, area, largest_area, p1, p2);
+        // println!("{:?} {:?} {:?} {:?} {:?}", is_green, area, largest_area, p1, p2);
         if is_green && *area > largest_area {
             largest_area = *area;
         }
