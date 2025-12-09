@@ -134,27 +134,44 @@ pub fn point_in_poly(x: ResultType, y: ResultType, poly: &[(ResultType,ResultTyp
 /// and an adjacent polygon edge (p1,p2), returns true if the polygon
 /// edge crosses into the *interior* of the rectangle.
 ///
-/// Search terms: 
-/// "line segment intersection with bounding box"
-/// "range overlap check"
+/// https://stackoverflow.com/questions/3235385/given-a-bounding-box-and-a-line-two-points-determine-if-the-line-intersects-t
 pub fn adjacent_edge_intersects(
     rect: ((ResultType,ResultType),(ResultType,ResultType)),
     edge: ((ResultType,ResultType),(ResultType,ResultType)),
 ) -> bool {
-    let (rA, rB) = rect;
-    let (p1, p2) = edge;
-    let left   = min(rA.0, rB.0);
-    let right  = max(rA.0, rB.0);
-    let top    = min(rA.1, rB.1);
-    let bottom = max(rA.1, rB.1);
-    let rectPoints = vec![
-        (left, top),
-        (right, top),
-        (right, bottom),
-        (left, bottom)
-    ];
+    let ((x1, y1), (x2, y2)) = rect;
 
-    point_in_poly(p1.0, p1.1, &rectPoints) != point_in_poly(p2.0, p2.1, &rectPoints)
+    let left   = x1.min(x2);
+    let right  = x1.max(x2);
+    let top    = y1.min(y2);
+    let bottom = y1.max(y2);
+
+    let ((ex1, ey1), (ex2, ey2)) = edge;
+
+    // edge is vertical because x is same.
+    if ex1 == ex2 {
+        let x_between_points = left < ex1 && ex1 < right;
+        let edge_top = ey1.min(ey2);
+        let edge_bottom = ey1.max(ey2);
+        if x_between_points {
+            return !(edge_bottom <= top || edge_top >= bottom);
+        }
+        return false;
+    }
+
+    // edge is horizontal because y is same.
+    if ey1 == ey2 {
+        // 0 is at the top of the "grid" in this case. smaller is "higher"
+        let y_between_points = top < ey1 && ey1 < bottom;
+        let edge_left = ex1.min(ex2);
+        let edge_right = ex1.max(ex2);
+        if y_between_points {
+            return !(edge_right <= left || edge_left >= right);
+        }
+        return false;
+    }
+
+    false
 }
 
 /// Checks if the axis-aligned rectangle between p1 and p2 is valid:
@@ -223,7 +240,8 @@ mod tests {
     #[test]
     fn test_adj_edge_intersects_invalid_rect() {
         let rect = ((2,3),(9,5));
-        let edge = ((9,5),(9,7)); // vertical edge crosses right side
+        let edge = ((8,2),(8,6)); 
+        // vertical line at x=8, spanning y=2..6 → passes through interior
 
         assert!(adjacent_edge_intersects(rect, edge));
     }
