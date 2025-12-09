@@ -138,10 +138,23 @@ pub fn point_in_poly(x: ResultType, y: ResultType, poly: &[(ResultType,ResultTyp
 /// "line segment intersection with bounding box"
 /// "range overlap check"
 pub fn adjacent_edge_intersects(
-    rect: ((i64,i64),(i64,i64)),
-    edge: ((i64,i64),(i64,i64)),
+    rect: ((ResultType,ResultType),(ResultType,ResultType)),
+    edge: ((ResultType,ResultType),(ResultType,ResultType)),
 ) -> bool {
-    unimplemented!()
+    let (rA, rB) = rect;
+    let (p1, p2) = edge;
+    let left   = min(rA.0, rB.0);
+    let right  = max(rA.0, rB.0);
+    let top    = min(rA.1, rB.1);
+    let bottom = max(rA.1, rB.1);
+    let rectPoints = vec![
+        (left, top),
+        (right, top),
+        (right, bottom),
+        (left, bottom)
+    ];
+
+    point_in_poly(p1.0, p1.1, &rectPoints) != point_in_poly(p2.0, p2.1, &rectPoints)
 }
 
 /// Checks if the axis-aligned rectangle between p1 and p2 is valid:
@@ -214,6 +227,63 @@ mod tests {
 
         assert!(adjacent_edge_intersects(rect, edge));
     }
+
+    #[test]
+    fn edge_horizontal_crosses_rect_interior() {
+        let rect = ((2, 3), (9, 5));
+        let edge = ((0, 4), (20, 4)); // passes straight through rectangle interior
+        assert!(adjacent_edge_intersects(rect, edge));
+    }
+
+    #[test]
+    fn edge_horizontal_outside_rect_does_not_intersect() {
+        let rect = ((2, 3), (9, 5));
+        let edge = ((0, 2), (20, 2)); // entirely below
+        assert!(!adjacent_edge_intersects(rect, edge));
+    }
+
+    #[test]
+    fn edge_horizontal_touching_top_boundary_does_not_intersect() {
+        let rect = ((2, 3), (9, 5));
+        let edge = ((0, 3), (20, 3)); // exactly on top boundary
+        assert!(!adjacent_edge_intersects(rect, edge));
+    }
+
+    #[test]
+    fn edge_horizontal_touching_bottom_boundary_does_not_intersect() {
+        let rect = ((2, 3), (9, 5));
+        let edge = ((0, 5), (20, 5)); // exactly on bottom boundary
+        assert!(!adjacent_edge_intersects(rect, edge));
+    }
+
+    #[test]
+    fn edge_vertical_crosses_rect_interior() {
+        let rect = ((2, 3), (9, 5));
+        let edge = ((4, 0), (4, 20)); // passes straight through rectangle interior
+        assert!(adjacent_edge_intersects(rect, edge));
+    }
+
+    #[test]
+    fn edge_vertical_outside_rect_does_not_intersect() {
+        let rect = ((2, 3), (9, 5));
+        let edge = ((10, 0), (10, 20)); // entirely to the right
+        assert!(!adjacent_edge_intersects(rect, edge));
+    }
+
+    #[test]
+    fn edge_vertical_touching_left_boundary_does_not_intersect() {
+        let rect = ((2, 3), (9, 5));
+        let edge = ((2, 0), (2, 20)); // exactly on left boundary
+        assert!(!adjacent_edge_intersects(rect, edge));
+    }
+
+    #[test]
+    fn edge_vertical_touching_right_boundary_does_not_intersect() {
+        let rect = ((2, 3), (9, 5));
+        let edge = ((9, 0), (9, 20)); // exactly on right boundary
+        assert!(!adjacent_edge_intersects(rect, edge));
+    }
+
 
     #[test]
     fn test_rectangle_area() {
