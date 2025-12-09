@@ -1,6 +1,7 @@
 use std::fs;
 use std::time::Instant;
 use std::collections::HashSet;
+use std::cmp::{min, max};
 
 fn main() {
     let raw_data = fs::read_to_string("./input").expect("bad input data");
@@ -18,8 +19,7 @@ fn main() {
     println!("Took: {:?}", time);
 }
 
-type ResultType = i128;
-
+type ResultType = i64;
 fn p1(raw_data: &str) -> ResultType {
     let tiles: Vec<(ResultType, ResultType)> = raw_data.lines().take_while(|line| !line.is_empty()).map(|line| {
         let mut xy = line.split(",");
@@ -51,183 +51,167 @@ fn p2(raw_data: &str) -> ResultType {
             xy.next().expect("no digit y").parse().expect("bad number y")
         )
     }).collect();
-    println!("{:?}", "going red...");
 
-
-    // Pre-compute the bounding box around the grid so that we can easily tell what is
-    // "outside" versus "inside" so that we can start inside and flood in the right
-    // direction.
-    let mut min_x = ResultType::MAX;
-    let mut max_x = ResultType::MIN;
-    let mut min_y = ResultType::MAX;
-    let mut max_y = ResultType::MIN;
-
-    // println!("{:?}", "going green...");
-    // let mut green_tiles = HashSet::new();
-    // let n = red_tiles.len();
-    // // Time to draw straight lines of green between red tiles.
-    // for i in 0..n {
-    //     let first = red_tiles[i];
-
-    //     let second = if i + 1 != n {
-    //         red_tiles[i + 1]
-    //     } else {
-    //         red_tiles[0]
-    //     };
-
-    //     // there is a green STRAIGHT line between these two points.
-    //     let bx = first.0.min(second.0);
-    //     let bxMax = first.0.max(second.0);
-    //     let by = first.1.min(second.1);
-    //     let byMax = first.1.max(second.1);
-    //     for x in bx..=bxMax {
-    //         for y in by..=byMax {
-    //             // we technically count the red tiles as green, but that doesn't matter.
-    //             // its basically just a list of valid places to be
-    //             green_tiles.insert((x, y));
-    //         }
-    //     }
-
-    //     // running precompute.
-    //     if min_x > bx {
-    //         min_x = bx;
-    //     }
-    //     if max_x < bxMax {
-    //         max_x = bxMax;
-    //     }
-    //     if min_y > by {
-    //         min_y = by;
-    //     }
-    //     if max_y < byMax {
-    //         max_y = byMax;
-    //     }
-    // }
-    // But we're not done yet. We have completed the shape, and thus
-    // we need to now fill the shape inside of it. This is the actual
-    // hard part I suppose.
-    // maybe https://en.wikipedia.org/wiki/Point_in_polygon ?
-    // let mut start_point = red_tiles[0].clone();
-    // let mut crossed = 0;
-    // // cast a "ray" from 0,0 to the point
-    // for x in 0..=max_x {
-    //     for y in 0..=max_y {
-    //         if green_tiles.contains(&(x,y)) {
-    //             crossed += 1;
-    //             if (crossed % 2 == 0) {
-    //                 start_point = (x,y - 1);
-    //             }
-    //         }
-    //     }
-    // }
-    // just choose one based roughtly on the loop connection and guesswork
-    // let start_point = (97713,51514);
-    // println!("Seeding at {:?}", start_point);
-    // let mut queue = Vec::new();
-    // queue.push(start_point);
-    // while let Some(tile) = queue.pop() {
-    //     for dx in -1..=1 {
-    //         for dy in -1..=1 {
-    //             let new_tile = (tile.0 + dx, tile.1 + dy);
-    //             if new_tile.0 < min_x || new_tile.0 > max_x {
-    //                 println!("bad seed");
-    //                 continue;
-    //             }
-    //             if new_tile.1 < min_y || new_tile.1 > max_y {
-    //                 println!("bad seed");
-    //                 continue;
-    //             }
-    //             if green_tiles.contains(&new_tile) {
-    //                 continue;
-    //             } else {
-    //                 green_tiles.insert(new_tile.clone());
-    //                 queue.push(new_tile.clone());
-    //                 // println!("{:?}", new_tile);
-    //             }
-    //         }
-    //     }
-    // }
-
-
-
-    let mut areas = vec![];
-    for p1 in red_tiles.iter() {
-        for p2 in red_tiles.iter() {
+    let mut max_area = 0;
+    for p1 in &red_tiles {
+        for  p2 in &red_tiles {
             if p1 == p2 {
                 continue;
             }
-            let width = 1 + (p1.0 - p2.0).abs();
-            let height = 1 + (p1.1 - p2.1).abs();
-            let area = width * height;
-            let mut inside = 0; 
 
-            let bx = p1.0.min(p2.0);
-            let bxMax = p1.0.max(p2.0);
-            let by = p1.1.min(p2.1);
-            let byMax = p1.1.max(p2.1);
-            let mid_x = (bx + bxMax) / 2;
-            let mid_y = (by + byMax) / 2;
+            let left   = min(p1.0, p2.0);
+            let right  = max(p1.0, p2.0);
+            let top    = min(p1.1, p2.1);
+            let bottom = max(p1.1, p2.1);
 
-            let valid = point_in_poly(mid_x, mid_y, &red_tiles)
-            && point_in_poly(bx, by, &red_tiles)
-            && point_in_poly(bx, byMax, &red_tiles)
-            && point_in_poly(bxMax, by, &red_tiles)
-            && point_in_poly(bxMax, byMax, &red_tiles);
+            // are the corners inside of the polygon?
+            if !(
+                point_in_poly(left, top, &red_tiles) &&
+                point_in_poly(left, bottom, &red_tiles) &&
+                point_in_poly(right, top, &red_tiles) &&
+                point_in_poly(right, bottom, &red_tiles)
+            ) {
+                continue;
+            }
 
-            
-            if valid {
-                areas.push((area, p1, p2));
+
+            // 
+            let mut blocked = false;
+            for i in 0..red_tiles.len() {
+                let a = red_tiles[i];
+                let b = red_tiles[(i+1) % red_tiles.len()];
+                if adjacent_edge_intersects(( (left, top), (right, bottom) ), (a,b)) {
+                    blocked = true;
+                    break;
+                }
+            }
+            if blocked { 
+                continue; 
+            }
+
+            let area = (1 + (p1.0 - p2.0).abs()) * (1 + (p1.1 - p2.1).abs());
+            if area > max_area {
+                max_area = area;
             }
         }
     }
-    areas.sort_by_key(|(a, _, _)| *a);
 
-    // Walk backward from the largest area to the smallest
-    let mut largest_area = 0;
-    for (area, p1, p2) in areas.iter().rev() {
-        // let mut is_green = true;
-        // let bx = p1.0.min(p2.0);
-        // let bxMax = p1.0.max(p2.0);
-        // let by = p1.1.min(p2.1);
-        // let byMax = p1.1.max(p2.1);
-        // for x in bx..=bxMax {
-        //     for y in by..=byMax {
-        //         // we technically count the red tiles as green, but that doesn't matter.
-        //         if !green_tiles.contains(&(x, y)) {
-        //             is_green = false;
-        //             break;
-        //         }
-        //     }
-        //     if !is_green {
-        //         break;
-        //     }
-        // }
-        // println!("{:?} {:?} {:?} {:?} {:?}", is_green, area, largest_area, p1, p2);
-        if *area > largest_area {
-            largest_area = *area;
-        }
-    }
-
-    // 4492472302 answer too high
-    largest_area
+    max_area
 }
 
-fn point_in_poly(x: ResultType, y: ResultType, poly: &Vec<(ResultType, ResultType)>) -> bool {
-    let mut crossings = 0;
-    let n = poly.len();
 
-    for i in 0..n {
-        let (x1, y1) = poly[i];
-        let (x2, y2) = poly[(i+1) % n];
-
-        // Check if ray crosses the edge
-        let intersects = ((y1 > y) != (y2 > y)) &&
-                         (x < (x2 - x1) * (y - y1) / (y2 - y1) + x1);
-
-        if intersects {
-            crossings += 1;
-        }
-    }
-
-    crossings % 2 == 1
+/// Returns true if (x,y) is inside the polygon using the even–odd rule.
+/// 
+/// Search terms: "point in polygon even odd", "ray casting algorithm"
+pub fn point_in_poly(x: i64, y: i64, poly: &[(i64,i64)]) -> bool {
+    unimplemented!()
 }
 
+/// Given a rectangle defined by two opposite corners rect1 and rect2,
+/// and an adjacent polygon edge (p1,p2), returns true if the polygon
+/// edge crosses into the *interior* of the rectangle.
+///
+/// Search terms: 
+/// "line segment intersection with bounding box"
+/// "range overlap check"
+pub fn adjacent_edge_intersects(
+    rect: ((i64,i64),(i64,i64)),
+    edge: ((i64,i64),(i64,i64)),
+) -> bool {
+    unimplemented!()
+}
+
+/// Checks if the axis-aligned rectangle between p1 and p2 is valid:
+/// - All four corners are inside the polygon (even–odd rule)
+/// - No polygon edge intersects the interior of the rectangle
+///
+/// Search terms:
+/// "axis aligned rectangle interior test"
+/// "polygon edge vs bounding box intersection"
+pub fn is_rectangle_valid(
+    p1: (i64,i64),
+    p2: (i64,i64),
+    poly: &[(i64,i64)],
+    adjacency_edges: &[((i64,i64),(i64,i64))],
+) -> bool {
+    unimplemented!()
+}
+
+/// Computes the geometric area of the rectangle defined by p1 and p2.
+/// NOTE: NO +1 terms. This puzzle uses dx * dy.
+///
+/// Search terms:
+/// "geometry compute rectangular area from two points"
+pub fn rectangle_area(p1: (i64,i64), p2: (i64,i64)) -> i64 {
+    unimplemented!()
+}
+
+/// Iterates over all pairs of red tiles and returns the largest valid
+/// rectangle area.
+///
+/// Search terms:
+/// "pairwise iteration", "combinatorics n^2 pair generation",
+/// "filter + max element"
+pub fn largest_valid_rectangle(poly: &[(i64,i64)]) -> i64 {
+    unimplemented!()
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_point_in_polygon_basic() {
+        let poly = vec![(0,0), (10,0), (10,10), (0,10)];
+
+        assert!(point_in_poly(5, 5, &poly));   // inside
+        assert!(!point_in_poly(-1, 5, &poly)); // outside left
+        assert!(!point_in_poly(5, 11, &poly)); // outside top
+    }
+
+    #[test]
+    fn test_point_in_polygon_complex_shape() {
+        let poly = vec![
+            (7,1),(11,1),(11,7),(9,7),(9,5),(2,5),(2,3),(7,3)
+        ];
+
+        assert!(point_in_poly(8,4,&poly));  // inside
+        assert!(!point_in_poly(1,1,&poly)); // outside
+    }
+
+    #[test]
+    fn test_adj_edge_does_not_intersect_valid_rect() {
+        let rect = ((2,3),(9,5));
+        let edge = ((7,1),(11,1)); // horizontal above rectangle
+
+        assert!(!adjacent_edge_intersects(rect, edge));
+    }
+
+    #[test]
+    fn test_adj_edge_intersects_invalid_rect() {
+        let rect = ((2,3),(9,5));
+        let edge = ((9,5),(9,7)); // vertical edge crosses right side
+
+        assert!(adjacent_edge_intersects(rect, edge));
+    }
+
+    #[test]
+    fn test_rectangle_area() {
+        let p1 = (2,3);
+        let p2 = (9,5);
+
+        assert_eq!(rectangle_area(p1, p2), 14); // dx=7, dy=2 → 14
+    }
+
+    #[test]
+    fn test_puzzle_example_biggest_area_24() {
+        let poly = vec![
+            (7,1),(11,1),(11,7),(9,7),(9,5),(2,5),(2,3),(7,3)
+        ];
+
+        let area = largest_valid_rectangle(&poly);
+
+        assert_eq!(area, 24);
+    }
+}
