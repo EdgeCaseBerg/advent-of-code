@@ -54,7 +54,7 @@ fn p2(raw_data: &str) -> ResultType {
 
     let mut green_tiles = HashSet::new();
     let n = red_tiles.len();
-    // don't forget the edges.
+    // Time to draw straight lines of green between red tiles.
     for i in 0..n {
         let first = red_tiles[i];
 
@@ -77,6 +77,9 @@ fn p2(raw_data: &str) -> ResultType {
             }
         }
     }
+    // But we're not done yet. We have completed the shape, and thus
+    // we need to now fill the shape inside of it. This is the actual
+    // hard part I suppose.
     println!("GREEN{:?}", green_tiles);
 
     let mut areas = vec![];
