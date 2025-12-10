@@ -96,8 +96,37 @@ fn parse(line: &str) -> (Vec<u8>, Vec<Vec<u8>>, Vec<usize>) {
 fn fewest_presses_with_joltage(goal: Vec<u8>, buttons: Vec<Vec<u8>>, joltages: Vec<usize>) -> usize {
     // same deal as presses but now our state is bigger.
     // contraint is that joltage only ever INCREASES, so we should be able to leverage that.
+    let n = goal.len();
+    let start = vec![0u8; n];
+    let start_joltage = vec![0usize; n];
 
-    0
+    // We just BFS to explore all options brute force for now
+    let mut q = VecDeque::new();
+    q.push_back(((start.clone(), start_joltage.clone()), 0usize));
+    let mut visited = HashSet::new();
+    visited.insert((start, start_joltage));
+
+    while let Some(((state, joltage), dist)) = q.pop_front() {
+        for btn in &buttons {
+            let next = apply_button(state.clone(), btn);
+            let next_jolt = apply_joltage(joltage.clone(), btn);
+
+            if !visited.contains(&(next.clone(), next_jolt.clone())) {
+                if machine_done(&next, &goal) && joltage_matches(&next_jolt, &joltages) {
+                    return dist + 1;
+                }
+
+                visited.insert((next.clone(), next_jolt.clone()));
+                if !joltage_invalid(&next_jolt, &joltages) {
+                    q.push_back(((next, next_jolt), dist + 1));
+                }
+            }
+        }
+    }
+
+    // arbitrary nonsense.
+    println!("{:?} {:?}", goal, buttons);
+    usize::MAX
 }
 
 fn fewest_presses(goal: Vec<u8>, buttons: Vec<Vec<u8>>) -> usize {
@@ -159,6 +188,24 @@ fn apply_joltage(mut joltage: Vec<usize>, button_click: &[u8]) -> Vec<usize> {
     joltage
 }
 
+fn joltage_matches(joltage: &Vec<usize>, goal: &Vec<usize>) -> bool {
+    for i in 0..joltage.len() {
+        if joltage[i] != goal[i] {
+            return false
+        }
+    }
+    true
+}
+
+fn joltage_invalid(joltage: &Vec<usize>, goal: &Vec<usize>) -> bool {
+    for i in 0..joltage.len() {
+        if joltage[i] > goal[i] {
+            return true;
+        }
+    }
+    return false;
+}
+
 
 #[cfg(test)]
 mod tests {
@@ -206,9 +253,23 @@ mod tests {
 
     #[test]
     fn test_joltage_apply() {
-        let mut joltage = vec![1,0,0,1];
+        let joltage = vec![1,0,0,1];
         let joltage =  apply_joltage(joltage, &[0, 1, 1, 0]);
         assert_eq!(joltage, [1, 1, 1, 1])
+    }
+
+    #[test]
+    fn test_joltage_match() {
+        let joltage = vec![1,0,0,1];
+        let jolt_goal = vec![1,0,0,1];
+        assert!(joltage_matches(&joltage, &jolt_goal));
+    }
+
+    #[test]
+    fn test_joltage_invalid_when_bigger() {
+        let joltage = vec![2,0,0,1];
+        let jolt_goal = vec![1,0,0,1];
+        assert!(joltage_invalid(&joltage, &jolt_goal));
     }
 
 }
