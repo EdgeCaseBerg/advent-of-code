@@ -1,6 +1,9 @@
 use std::fs;
 use std::time::Instant;
-use std::collections::{HashSet, VecDeque};
+use std::collections::{HashSet, VecDeque, BinaryHeap};
+use std::cmp::Reverse;
+
+
 
 fn main() {
     let raw_data = fs::read_to_string("./input").expect("bad input data");
@@ -34,7 +37,7 @@ fn p2(raw_data: &str) -> ResultType {
     let mut total_presses = 0;
     for configuration in configurations {
         let (_, buttons, joltages) = configuration;
-        total_presses += fewest_presses_with_joltage(buttons, joltages);
+        total_presses += fewest_presses_with_joltage_a_star(buttons, joltages);
     }
     total_presses
 }
@@ -120,6 +123,50 @@ fn fewest_presses_with_joltage(buttons: Vec<Vec<u8>>, joltages_goal: Vec<usize>)
 
     usize::MAX // if no solution found
 }
+
+fn fewest_presses_with_joltage_a_star(
+    buttons: Vec<Vec<u8>>,
+    joltage_goal: Vec<usize>
+) -> usize {
+    let n = joltage_goal.len();
+    let start_jolt = vec![0usize; n];
+
+    let mut heap = BinaryHeap::new();
+    let mut visited = HashSet::new();
+
+    // (priority, dist_so_far, joltage)
+    heap.push(Reverse((0, 0, start_jolt.clone())));
+    visited.insert(start_jolt);
+
+    while let Some(Reverse((_, dist, jolt))) = heap.pop() {
+        if jolt == joltage_goal {
+            return dist;
+        }
+
+        for btn in &buttons {
+            let next_jolt = apply_joltage(jolt.clone(), btn);
+
+            if joltage_invalid(&next_jolt, &joltage_goal) {
+                continue;
+            }
+
+            if visited.insert(next_jolt.clone()) {
+                let remaining: Vec<usize> = jolt.iter().zip(&joltage_goal).map(|(cur, goal)| goal - cur).collect();
+                let heuristic = remaining.iter().enumerate().map(|(i, &r)| {
+                    let affect = buttons.iter().filter(|b| b[i] == 1).count();
+                    if affect == 0 { usize::MAX } else { (r + affect - 1) / affect }
+                }).max().unwrap_or(0);
+
+                let priority = dist + 1 + heuristic;
+                heap.push(Reverse((priority, dist + 1, next_jolt)));
+
+            }
+        }
+    }
+
+    usize::MAX
+}
+
 
 fn fewest_presses(goal: Vec<u8>, buttons: Vec<Vec<u8>>) -> usize {
     let n = goal.len();
