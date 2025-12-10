@@ -18,12 +18,17 @@ fn main() {
 }
 
 type ResultType = usize;
-fn p1(_raw_data: &str) -> ResultType {
+fn p1(raw_data: &str) -> ResultType {
+    let (machine_goal, buttons, _) = parse(raw_data);
     0
 }
 
 fn p2(_raw_data: &str) -> ResultType {
     0
+}
+
+fn parse(raw_data: &str) -> (Vec<u8>, Vec<Vec<u8>>, Vec<usize>) {
+    (vec![], vec![], vec![])
 }
 
 
@@ -32,12 +37,19 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_point_in_polygon_basic() {
-        let poly = vec![(0,0), (10,0), (10,10), (0,10)];
+    fn test_parse() {
+        let (m, buttons, joltages) = parse("[.##.] (3) (1,3) (2) (2,3) (0,2) (0,1) {3,5,4,7}");
 
-        assert!(point_in_poly(5, 5, &poly));   // inside
-        assert!(!point_in_poly(-1, 5, &poly)); // outside left
-        assert!(!point_in_poly(5, 11, &poly)); // outside top
+        assert_eq!(m, vec![0,1,1,0]);
+        assert_eq!(buttons, vec![
+            vec![0,0,0,1],
+            vec![0,1,0,1],
+            vec![0,0,1,0],
+            vec![0,0,1,1],
+            vec![1,0,1,0],
+            vec![1,1,0,0]
+        ]);
+        assert_eq!(joltages, vec![3,5,4,7])
     }
 
 }
