@@ -33,7 +33,7 @@ fn p2(_raw_data: &str) -> ResultType {
 }
 
 fn parse(line: &str) -> (Vec<u8>, Vec<Vec<usize>>, Vec<usize>) {
-    let (mut goal_part, rest) = line.split_once(" ").expect("couldnt split");
+    let (goal_part, rest) = line.split_once(" ").expect("couldnt split");
     let goal: Vec<u8> = goal_part.chars().fold(vec![], |mut acc, c| {
         match c {
             '.' => { acc.push(0); acc },
@@ -42,7 +42,7 @@ fn parse(line: &str) -> (Vec<u8>, Vec<Vec<usize>>, Vec<usize>) {
         }
     });
 
-    let (mut btn_part, rest) = rest.split_once("{").expect("couldnt split");
+    let (btn_part, rest) = rest.split_once("{").expect("couldnt split");
     let mut buttons: Vec<Vec<usize>> = vec![];
     for raw in btn_part.split(" ").filter(|x| !x.trim().is_empty()) {
         let mut digits = vec![0; goal.len()];
@@ -81,7 +81,33 @@ fn parse(line: &str) -> (Vec<u8>, Vec<Vec<usize>>, Vec<usize>) {
 }
 
 fn fewest_presses(goal: Vec<u8>, buttons: Vec<Vec<usize>>) -> usize {
-    0
+    // note I'm not trying to solve yet, just confirming thigns work.
+    let mut machine = vec![0; goal.len()];
+    let mut i = 0;
+    for btn in buttons {
+        machine = apply_button(machine, btn);
+        if machine_done(&machine, &goal) {
+            return i;
+        }
+        println!("{:?}", machine);
+    }
+    i
+}
+
+fn apply_button(mut machine: Vec<u8>, button_click: Vec<usize>) -> Vec<u8> {
+    for i in 0..machine.len() {
+        machine[i] = machine[i] ^ button_click[i] as u8;
+    }
+    machine
+}
+
+fn machine_done(machine: &Vec<u8>, goal: &Vec<u8>) -> bool {
+    for i in 0..machine.len() {
+        if machine[i] != goal[i] {
+            return false
+        }
+    }
+    true
 }
 
 
