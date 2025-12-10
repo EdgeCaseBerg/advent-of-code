@@ -33,8 +33,8 @@ fn p2(raw_data: &str) -> ResultType {
     let configurations: Vec<(Vec<u8>, Vec<Vec<u8>>, Vec<usize>)> = raw_data.lines().map(|line| parse(line)).collect();
     let mut total_presses = 0;
     for configuration in configurations {
-        let (goal, buttons, joltages) = configuration;
-        total_presses += fewest_presses_with_joltage(goal, buttons, joltages);
+        let (_, buttons, joltages) = configuration;
+        total_presses += fewest_presses_with_joltage(buttons, joltages);
     }
     total_presses
 }
@@ -93,42 +93,32 @@ fn parse(line: &str) -> (Vec<u8>, Vec<Vec<u8>>, Vec<usize>) {
     (goal, buttons, joltages)
 }
 
-fn fewest_presses_with_joltage(goal: Vec<u8>, buttons: Vec<Vec<u8>>, joltages_goal: Vec<usize>) -> usize {
-    // same deal as presses but now our state is bigger.
-    // contraint is that joltage only ever INCREASES, so we should be able to leverage that.
-    let n = goal.len();
-    let start = vec![0u8; n];
+fn fewest_presses_with_joltage(buttons: Vec<Vec<u8>>, joltages_goal: Vec<usize>) -> usize {
+    let n = joltages_goal.len();
     let start_joltage = vec![0usize; n];
 
-    // We just BFS to explore all options brute force for now
+    // BFS queue: (current joltage vector, number of presses)
     let mut q = VecDeque::new();
-    q.push_back(((start.clone(), start_joltage.clone()), 0usize));
+    q.push_back((start_joltage.clone(), 0usize));
+
     let mut visited = HashSet::new();
-    visited.insert((start, start_joltage));
+    visited.insert(start_joltage);
 
-    while let Some(((state, joltage), dist)) = q.pop_front() {
-
-        if machine_done(&state, &goal) && joltage_matches(&joltage, &joltages_goal) {
+    while let Some((joltage, dist)) = q.pop_front() {
+        if joltage_matches(&joltage, &joltages_goal) {
             return dist;
         }
 
         for btn in &buttons {
-            let next_state = apply_button(state.clone(), btn);
             let next_jolt = apply_joltage(joltage.clone(), btn);
-            println!("dist={} state={:?} jolt={:?}", dist, next_state, next_jolt);
 
-            if !joltage_invalid(&next_jolt, &joltages_goal) {
-                let key = (next_state.clone(), next_jolt.clone());
-                if visited.insert(key) {
-                    q.push_back(((next_state, next_jolt), dist + 1));
-                }
+            if !joltage_invalid(&next_jolt, &joltages_goal) && visited.insert(next_jolt.clone()) {
+                q.push_back((next_jolt, dist + 1));
             }
         }
     }
 
-    // arbitrary nonsense.
-    println!("{:?} {:?} JoltGoal: {:?}", goal, buttons, joltages_goal);
-    usize::MAX
+    usize::MAX // if no solution found
 }
 
 fn fewest_presses(goal: Vec<u8>, buttons: Vec<Vec<u8>>) -> usize {
@@ -277,19 +267,19 @@ mod tests {
     #[test]
     fn test_first_machine_with_joltage() {
         let (m, buttons, joltage_goal) = parse("[.##.] (3) (1,3) (2) (2,3) (0,2) (0,1) {3,5,4,7}");
-        assert_eq!(10, fewest_presses_with_joltage(m, buttons, joltage_goal));
+        assert_eq!(10, fewest_presses_with_joltage(buttons, joltage_goal));
     }
 
     #[test]
     fn test_second_machine_with_joltage() {
         let (m, buttons, joltage_goal) = parse("[...#.] (0,2,3,4) (2,3) (0,4) (0,1,2) (1,2,3,4) {7,5,12,7,2}");
-        assert_eq!(12, fewest_presses_with_joltage(m, buttons, joltage_goal));
+        assert_eq!(12, fewest_presses_with_joltage(buttons, joltage_goal));
     }
 
     #[test]
     fn test_third_machine_with_joltage() {
         let (m, buttons, joltage_goal) = parse("[.###.#] (0,1,2,3,4) (0,3,4) (0,1,2,4,5) (1,2) {10,11,11,5,10,5}");
-        assert_eq!(11, fewest_presses_with_joltage(m, buttons, joltage_goal));
+        assert_eq!(11, fewest_presses_with_joltage(buttons, joltage_goal));
     }
 
 }
