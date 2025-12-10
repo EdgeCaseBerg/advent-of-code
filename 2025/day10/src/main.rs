@@ -80,18 +80,57 @@ fn parse(line: &str) -> (Vec<u8>, Vec<Vec<usize>>, Vec<usize>) {
     (goal, buttons, joltage)
 }
 
+// fn fewest_presses(goal: Vec<u8>, buttons: Vec<Vec<usize>>) -> usize {
+//     // Just BFS it for now.
+//     // initial state -> 
+//     //    b1 -> b2 ...
+//     //    b2 -> b3 ...
+//     // etc. Given b1 + b1 = b1, we can safely ignore pressing the same button as the current depth
+//     let mut machine = vec![0; goal.len()];
+//     let mut i = 0;
+//     for btn in buttons {
+//         machine = apply_button(machine, btn);
+//         if machine_done(&machine, &goal) {
+//             return i;
+//         }
+//         println!("{:?}", machine);
+//     }
+//     i
+// }
+
+use std::collections::{HashSet, VecDeque};
+
 fn fewest_presses(goal: Vec<u8>, buttons: Vec<Vec<usize>>) -> usize {
-    // note I'm not trying to solve yet, just confirming thigns work.
-    let mut machine = vec![0; goal.len()];
-    let mut i = 0;
-    for btn in buttons {
-        machine = apply_button(machine, btn);
-        if machine_done(&machine, &goal) {
-            return i;
-        }
-        println!("{:?}", machine);
+    let n = goal.len();
+    let start = vec![0u8; n];
+
+    if start == goal {
+        return 0;
     }
-    i
+
+    // We just BFS to explore all options brute force for now
+    let mut q = VecDeque::new();
+    q.push_back((start.clone(), 0usize));
+    let mut visited = HashSet::new();
+    visited.insert(start);
+
+    while let Some((state, dist)) = q.pop_front() {
+        for btn in &buttons {
+            let next = apply_button(state.clone(), btn.clone());
+
+            if !visited.contains(&next) {
+                if next == goal {
+                    return dist + 1;
+                }
+
+                visited.insert(next.clone());
+                q.push_back((next, dist + 1));
+            }
+        }
+    }
+
+    // arbitrary nonsense.
+    1000000000
 }
 
 fn apply_button(mut machine: Vec<u8>, button_click: Vec<usize>) -> Vec<u8> {
