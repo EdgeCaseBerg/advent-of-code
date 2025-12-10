@@ -1,6 +1,6 @@
 use std::fs;
 use std::time::Instant;
-use std::collections::{HashSet, VecDeque, BinaryHeap};
+use std::collections::{HashSet, VecDeque, BinaryHeap, HashMap};
 use std::cmp::Reverse;
 
 
@@ -37,7 +37,7 @@ fn p2(raw_data: &str) -> ResultType {
     let mut total_presses = 0;
     for configuration in configurations {
         let (_, buttons, joltages) = configuration;
-        total_presses += fewest_presses_with_joltage_a_star(buttons, joltages);
+        total_presses += fewest_presses_with_joltage(buttons, joltages);
     }
     total_presses
 }
@@ -98,74 +98,122 @@ fn parse(line: &str) -> (Vec<u8>, Vec<Vec<u8>>, Vec<usize>) {
 
 fn fewest_presses_with_joltage(buttons: Vec<Vec<u8>>, joltages_goal: Vec<usize>) -> usize {
     let n = joltages_goal.len();
-    let start_joltage = vec![0usize; n];
 
-    // BFS queue: (current joltage vector, number of presses)
-    let mut q = VecDeque::new();
-    q.push_back((start_joltage.clone(), 0usize));
+    // Joltage counters always start at zero
+    let start = vec![0usize; n];
 
-    let mut visited = HashSet::new();
-    visited.insert(start_joltage);
-
-    while let Some((joltage, dist)) = q.pop_front() {
-        if joltage_matches(&joltage, &joltages_goal) {
-            return dist;
-        }
-
-        for btn in &buttons {
-            let next_jolt = apply_joltage(joltage.clone(), btn);
-
-            if !joltage_invalid(&next_jolt, &joltages_goal) && visited.insert(next_jolt.clone()) {
-                q.push_back((next_jolt, dist + 1));
-            }
-        }
-    }
-
-    usize::MAX // if no solution found
-}
-
-fn fewest_presses_with_joltage_a_star(
-    buttons: Vec<Vec<u8>>,
-    joltage_goal: Vec<usize>
-) -> usize {
-    let n = joltage_goal.len();
-    let start_jolt = vec![0usize; n];
-
+    // Min-heap for Dijkstra: (total_presses, joltage_state)
     let mut heap = BinaryHeap::new();
-    let mut visited = HashSet::new();
+    heap.push(Reverse((0usize, start.clone())));
 
-    // (priority, dist_so_far, joltage)
-    heap.push(Reverse((0, 0, start_jolt.clone())));
-    visited.insert(start_jolt);
+    // Best known number of presses to reach a given joltage vector
+    let mut best: HashMap<Vec<usize>, usize> = HashMap::new();
+    best.insert(start.clone(), 0);
 
-    while let Some(Reverse((_, dist, jolt))) = heap.pop() {
-        if jolt == joltage_goal {
-            return dist;
+    while let Some(Reverse((presses, state))) = heap.pop() {
+        // If this state already has a better cost recorded, skip it
+        if best[&state] < presses {
+            continue;
+        }
+
+        if joltage_matches(&state, &joltages_goal) {
+            return presses;
         }
 
         for btn in &buttons {
-            let next_jolt = apply_joltage(jolt.clone(), btn);
+            let next_jolt = apply_joltage(state.clone(), btn);
 
-            if joltage_invalid(&next_jolt, &joltage_goal) {
+            // Skip if this exceeds goal in any counter
+            if joltage_invalid(&next_jolt, &joltages_goal) {
                 continue;
             }
 
-            if visited.insert(next_jolt.clone()) {
-                let remaining: Vec<usize> = jolt.iter().zip(&joltage_goal).map(|(cur, goal)| goal - cur).collect();
-                let heuristic = remaining.iter().enumerate().map(|(i, &r)| {
-                    let affect = buttons.iter().filter(|b| b[i] == 1).count();
-                    if affect == 0 { usize::MAX } else { (r + affect - 1) / affect }
-                }).max().unwrap_or(0);
+            let next_cost = presses + 1;
 
-                let priority = dist + 1 + heuristic;
-                heap.push(Reverse((priority, dist + 1, next_jolt)));
-
+            match best.get(&next_jolt) {
+                Some(&old_cost) if old_cost <= next_cost => {
+                    // No improvement
+                    continue;
+                }
+                _ => {
+                    // New or better path
+                    best.insert(next_jolt.clone(), next_cost);
+                    heap.push(Reverse((next_cost, next_jolt)));
+                }
             }
         }
     }
 
+    // If no solution exists
     usize::MAX
 }
+
+use std::cmp::Reverse;
+use std::collections::{BinaryHeap, HashMap};
+
+pub fn fewest_presses_with_joltage_dp(
+    buttons: &[Vec<u8>],
+    jolt_goal: &[usize],
+) -> usize {
+    let n = jolt_goal.len();
+    let start = vec![0usize; n];
+
+    // Min-heap priority queue for Dijkstra: (presses, state)
+    let mut heap = BinaryHeap::new();
+    heap.push(Reverse((0usize, start.clone())));
+
+    // DP table: best known cost for each joltage vector
+    let mut best: HashMap<Vec<usize>, usize> = HashMap::new();
+    best.insert(start.clone(), 0);
+
+    while let Some(Reverse((presses, state))) = heap.pop() {
+        // If we reached goal, this is optimal (Dijkstra property)
+        if state == jolt_goal {
+            return presses;
+        }
+
+        // If we have a worse entry than recorded, skip
+        if *best.get(&state).unwrap() < presses {
+            continue;
+        }
+
+        // Try pressing each button
+        for btn in buttons {
+            let mut next = state.clone();
+            let mut valid = true;
+
+            // Apply button
+            for i in 0..n {
+                if btn[i] == 1 {
+                    next[i] += 1;
+                    if next[i] > jolt_goal[i] {
+                        valid = false;
+                        break;
+                    }
+                }
+            }
+
+            if !valid {
+                continue;
+            }
+
+            let next_cost = presses + 1;
+
+            match best.get(&next) {
+                Some(&old) if old <= next_cost => continue,
+                _ => {
+                    best.insert(next.clone(), next_cost);
+                    heap.push(Reverse((next_cost, next)));
+                }
+            }
+        }
+    }
+
+    // unreachable
+    usize::MAX
+}
+
+
 
 
 fn fewest_presses(goal: Vec<u8>, buttons: Vec<Vec<u8>>) -> usize {
