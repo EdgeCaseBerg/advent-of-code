@@ -93,7 +93,7 @@ fn parse(line: &str) -> (Vec<u8>, Vec<Vec<u8>>, Vec<usize>) {
     (goal, buttons, joltages)
 }
 
-fn fewest_presses_with_joltage(goal: Vec<u8>, buttons: Vec<Vec<u8>>, joltages: Vec<usize>) -> usize {
+fn fewest_presses_with_joltage(goal: Vec<u8>, buttons: Vec<Vec<u8>>, joltages_goal: Vec<usize>) -> usize {
     // same deal as presses but now our state is bigger.
     // contraint is that joltage only ever INCREASES, so we should be able to leverage that.
     let n = goal.len();
@@ -107,25 +107,27 @@ fn fewest_presses_with_joltage(goal: Vec<u8>, buttons: Vec<Vec<u8>>, joltages: V
     visited.insert((start, start_joltage));
 
     while let Some(((state, joltage), dist)) = q.pop_front() {
+
+        if machine_done(&state, &goal) && joltage_matches(&joltage, &joltages_goal) {
+            return dist;
+        }
+
         for btn in &buttons {
-            let next = apply_button(state.clone(), btn);
+            let next_state = apply_button(state.clone(), btn);
             let next_jolt = apply_joltage(joltage.clone(), btn);
+            println!("dist={} state={:?} jolt={:?}", dist, next_state, next_jolt);
 
-            if !visited.contains(&(next.clone(), next_jolt.clone())) {
-                if machine_done(&next, &goal) && joltage_matches(&next_jolt, &joltages) {
-                    return dist + 1;
-                }
-
-                visited.insert((next.clone(), next_jolt.clone()));
-                if !joltage_invalid(&next_jolt, &joltages) {
-                    q.push_back(((next, next_jolt), dist + 1));
+            if !joltage_invalid(&next_jolt, &joltages_goal) {
+                let key = (next_state.clone(), next_jolt.clone());
+                if visited.insert(key) {
+                    q.push_back(((next_state, next_jolt), dist + 1));
                 }
             }
         }
     }
 
     // arbitrary nonsense.
-    println!("{:?} {:?}", goal, buttons);
+    println!("{:?} {:?} JoltGoal: {:?}", goal, buttons, joltages_goal);
     usize::MAX
 }
 
