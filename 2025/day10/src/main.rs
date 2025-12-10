@@ -82,6 +82,16 @@ fn parse(line: &str) -> (Vec<u8>, Vec<Vec<u8>>, Vec<usize>) {
 
 
 fn fewest_presses_with_joltage(_buttons: Vec<Vec<u8>>, _jolt_goal: Vec<usize>) -> usize {
+    /* The input comes in like this:
+     * [ [1, 0], [0,1] ]      [1, 1]
+     * and then the goal is to know we should press the buttons once each to make 
+     * the initial state of [0,0] become [1, 1]. So, this is sorta like this:
+     * 
+     *  1a 0b = 1 jolt
+     *  0a 0b = 1 jolt
+     *
+     * Which is REALLY similar to matrices in linear algebra.
+     */
     usize::MAX
 }
 
