@@ -20,8 +20,12 @@ fn main() {
 type ResultType = usize;
 fn p1(raw_data: &str) -> ResultType {
     let configurations: Vec<(Vec<u8>, Vec<Vec<usize>>, Vec<usize>)> = raw_data.lines().map(|line| parse(line)).collect();
-    println!("{:?}", configurations);
-    0
+    let mut total_presses = 0;
+    for configuration in configurations {
+        let (goal, buttons, _) = configuration;
+        total_presses += fewest_presses(goal, buttons);
+    }
+    total_presses
 }
 
 fn p2(_raw_data: &str) -> ResultType {
@@ -73,8 +77,11 @@ fn parse(line: &str) -> (Vec<u8>, Vec<Vec<usize>>, Vec<usize>) {
         }
     }
 
-
     (goal, buttons, joltage)
+}
+
+fn fewest_presses(goal: Vec<u8>, buttons: Vec<Vec<usize>>) -> usize {
+    0
 }
 
 
