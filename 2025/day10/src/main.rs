@@ -19,7 +19,8 @@ fn main() {
 
 type ResultType = usize;
 fn p1(raw_data: &str) -> ResultType {
-    let (machine_goal, buttons, _) = parse(raw_data);
+    let configurations: Vec<(Vec<u8>, Vec<Vec<usize>>, Vec<usize>)> = raw_data.lines().map(|line| parse(line)).collect();
+    println!("{:?}", configurations);
     0
 }
 
@@ -27,8 +28,53 @@ fn p2(_raw_data: &str) -> ResultType {
     0
 }
 
-fn parse(raw_data: &str) -> (Vec<u8>, Vec<Vec<u8>>, Vec<usize>) {
-    (vec![], vec![], vec![])
+fn parse(line: &str) -> (Vec<u8>, Vec<Vec<usize>>, Vec<usize>) {
+    let (mut goal_part, rest) = line.split_once(" ").expect("couldnt split");
+    let goal: Vec<u8> = goal_part.chars().fold(vec![], |mut acc, c| {
+        match c {
+            '.' => { acc.push(0); acc },
+            '#' => { acc.push(1); acc },
+            _ => acc,
+        }
+    });
+
+    let (mut btn_part, rest) = rest.split_once("{").expect("couldnt split");
+    let mut buttons: Vec<Vec<usize>> = vec![];
+    for raw in btn_part.split(" ").filter(|x| !x.trim().is_empty()) {
+        let mut digits = vec![0; goal.len()];
+        let mut b = String::new();
+        for c in raw.chars() {
+            match c {
+                '0'..'9' => {
+                    b.push(c);
+                }
+                ',' | ')' => {
+                    let idx: usize = b.parse().expect("could not parse number for button");
+                    digits[idx] = 1;
+                    b = String::new();
+                },
+                _ => {}
+
+            }
+        }
+        buttons.push(digits.to_vec());
+    }
+    let mut joltage = vec![];
+    let mut s = String::new();
+    for c in rest.chars() {
+        match c {
+            '0'..'9' => {
+                s.push(c);
+            },
+            _ => {
+                joltage.push(s.parse().expect("cant parse joltage"));
+                s = String::new();
+            },
+        }
+    }
+
+
+    (goal, buttons, joltage)
 }
 
 
