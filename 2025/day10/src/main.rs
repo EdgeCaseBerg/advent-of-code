@@ -105,4 +105,22 @@ mod tests {
         assert_eq!(joltages, vec![3,5,4,7])
     }
 
+    #[test]
+    fn test_first_machine() {
+        let (m, buttons, _) = parse("[.##.] (3) (1,3) (2) (2,3) (0,2) (0,1) {3,5,4,7}");
+        assert_eq!(2, fewest_presses(m, buttons));
+    }
+
+    #[test]
+    fn test_second_machine() {
+        let (m, buttons, _) = parse("[...#.] (0,2,3,4) (2,3) (0,4) (0,1,2) (1,2,3,4) {7,5,12,7,2}");
+        assert_eq!(3, fewest_presses(m, buttons));
+    }
+
+    #[test]
+    fn test_third_machine() {
+        let (m, buttons, _) = parse("[.###.#] (0,1,2,3,4) (0,3,4) (0,1,2,4,5) (1,2) {10,11,11,5,10,5}");
+        assert_eq!(2, fewest_presses(m, buttons));
+    }
+
 }
