@@ -1,7 +1,6 @@
 use std::fs;
 use std::time::Instant;
-use std::collections::{HashSet, VecDeque, BinaryHeap, HashMap};
-use std::cmp::Reverse;
+use std::collections::{HashSet, VecDeque};
 
 
 
@@ -81,124 +80,10 @@ fn parse(line: &str) -> (Vec<u8>, Vec<Vec<u8>>, Vec<usize>) {
     (goal, buttons, joltages)
 }
 
-fn fewest_presses_with_joltage(buttons: Vec<Vec<u8>>, joltages_goal: Vec<usize>) -> usize {
-    let n = joltages_goal.len();
 
-    // Joltage counters always start at zero
-    let start = vec![0usize; n];
-
-    // Min-heap for Dijkstra: (total_presses, joltage_state)
-    let mut heap = BinaryHeap::new();
-    heap.push(Reverse((0usize, start.clone())));
-
-    // Best known number of presses to reach a given joltage vector
-    let mut best: HashMap<Vec<usize>, usize> = HashMap::new();
-    best.insert(start.clone(), 0);
-
-    while let Some(Reverse((presses, state))) = heap.pop() {
-        // If this state already has a better cost recorded, skip it
-        if best[&state] < presses {
-            continue;
-        }
-
-        if joltage_matches(&state, &joltages_goal) {
-            return presses;
-        }
-
-        for btn in &buttons {
-            let next_jolt = apply_joltage(state.clone(), btn);
-
-            // Skip if this exceeds goal in any counter
-            if joltage_invalid(&next_jolt, &joltages_goal) {
-                continue;
-            }
-
-            let next_cost = presses + 1;
-
-            match best.get(&next_jolt) {
-                Some(&old_cost) if old_cost <= next_cost => {
-                    // No improvement
-                    continue;
-                }
-                _ => {
-                    // New or better path
-                    best.insert(next_jolt.clone(), next_cost);
-                    heap.push(Reverse((next_cost, next_jolt)));
-                }
-            }
-        }
-    }
-
-    // If no solution exists
+fn fewest_presses_with_joltage(_buttons: Vec<Vec<u8>>, _jolt_goal: Vec<usize>) -> usize {
     usize::MAX
 }
-
-use std::cmp::Reverse;
-use std::collections::{BinaryHeap, HashMap};
-
-pub fn fewest_presses_with_joltage_dp(
-    buttons: &[Vec<u8>],
-    jolt_goal: &[usize],
-) -> usize {
-    let n = jolt_goal.len();
-    let start = vec![0usize; n];
-
-    // Min-heap priority queue for Dijkstra: (presses, state)
-    let mut heap = BinaryHeap::new();
-    heap.push(Reverse((0usize, start.clone())));
-
-    // DP table: best known cost for each joltage vector
-    let mut best: HashMap<Vec<usize>, usize> = HashMap::new();
-    best.insert(start.clone(), 0);
-
-    while let Some(Reverse((presses, state))) = heap.pop() {
-        // If we reached goal, this is optimal (Dijkstra property)
-        if state == jolt_goal {
-            return presses;
-        }
-
-        // If we have a worse entry than recorded, skip
-        if *best.get(&state).unwrap() < presses {
-            continue;
-        }
-
-        // Try pressing each button
-        for btn in buttons {
-            let mut next = state.clone();
-            let mut valid = true;
-
-            // Apply button
-            for i in 0..n {
-                if btn[i] == 1 {
-                    next[i] += 1;
-                    if next[i] > jolt_goal[i] {
-                        valid = false;
-                        break;
-                    }
-                }
-            }
-
-            if !valid {
-                continue;
-            }
-
-            let next_cost = presses + 1;
-
-            match best.get(&next) {
-                Some(&old) if old <= next_cost => continue,
-                _ => {
-                    best.insert(next.clone(), next_cost);
-                    heap.push(Reverse((next_cost, next)));
-                }
-            }
-        }
-    }
-
-    // unreachable
-    usize::MAX
-}
-
-
 
 
 fn fewest_presses(goal: Vec<u8>, buttons: Vec<Vec<u8>>) -> usize {
@@ -346,19 +231,19 @@ mod tests {
 
     #[test]
     fn test_first_machine_with_joltage() {
-        let (m, buttons, joltage_goal) = parse("[.##.] (3) (1,3) (2) (2,3) (0,2) (0,1) {3,5,4,7}");
+        let (_, buttons, joltage_goal) = parse("[.##.] (3) (1,3) (2) (2,3) (0,2) (0,1) {3,5,4,7}");
         assert_eq!(10, fewest_presses_with_joltage(buttons, joltage_goal));
     }
 
     #[test]
     fn test_second_machine_with_joltage() {
-        let (m, buttons, joltage_goal) = parse("[...#.] (0,2,3,4) (2,3) (0,4) (0,1,2) (1,2,3,4) {7,5,12,7,2}");
+        let (_, buttons, joltage_goal) = parse("[...#.] (0,2,3,4) (2,3) (0,4) (0,1,2) (1,2,3,4) {7,5,12,7,2}");
         assert_eq!(12, fewest_presses_with_joltage(buttons, joltage_goal));
     }
 
     #[test]
     fn test_third_machine_with_joltage() {
-        let (m, buttons, joltage_goal) = parse("[.###.#] (0,1,2,3,4) (0,3,4) (0,1,2,4,5) (1,2) {10,11,11,5,10,5}");
+        let (_, buttons, joltage_goal) = parse("[.###.#] (0,1,2,3,4) (0,3,4) (0,1,2,4,5) (1,2) {10,11,11,5,10,5}");
         assert_eq!(11, fewest_presses_with_joltage(buttons, joltage_goal));
     }
 
