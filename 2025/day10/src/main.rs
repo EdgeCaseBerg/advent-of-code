@@ -42,22 +42,7 @@ fn p2(raw_data: &str) -> ResultType {
     total_presses
 }
 
-fn parse_buttons(btn_part: &str, n: usize) -> Vec<Vec<u8>> {
-    let mut result = Vec::new();
-    for chunk in btn_part.split(")").filter(|c| !c.trim().is_empty()) {
-        // chunk looks like "(0,2,5"
-        let inside = chunk.trim_start_matches('(').trim();
-        if inside.is_empty() { continue; }
 
-        let mut mask = vec![0u8; n];
-        for num in inside.split(',') {
-            let idx: usize = num.trim().parse().unwrap();
-            mask[idx] = 1;
-        }
-        result.push(mask);
-    }
-    result
-}
 fn parse(line: &str) -> (Vec<u8>, Vec<Vec<u8>>, Vec<usize>) {
     let goal_str = line
         .split_once('[').unwrap().1
