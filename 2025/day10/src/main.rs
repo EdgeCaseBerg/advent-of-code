@@ -87,6 +87,13 @@ fn parse(line: &str) -> (Vec<u8>, Vec<Vec<u8>>, Vec<usize>) {
     (goal, buttons, joltages)
 }
 
+fn fewest_presses_with_joltage(goal: Vec<u8>, buttons: Vec<Vec<u8>>, joltages: Vec<usize>) -> usize {
+    // same deal as presses but now our state is bigger.
+    // contraint is that joltage only ever INCREASES, so we should be able to leverage that.
+
+    0
+}
+
 fn fewest_presses(goal: Vec<u8>, buttons: Vec<Vec<u8>>) -> usize {
     let n = goal.len();
     let start = vec![0u8; n];
@@ -137,6 +144,15 @@ fn machine_done(machine: &Vec<u8>, goal: &Vec<u8>) -> bool {
     true
 }
 
+fn apply_joltage(mut joltage: Vec<usize>, button_click: &[u8]) -> Vec<usize> {
+    for i in 0..joltage.len() {
+        if button_click[i] == 1 {
+            joltage[i] += 1;
+        }
+    }
+    joltage
+}
+
 
 #[cfg(test)]
 mod tests {
@@ -180,6 +196,13 @@ mod tests {
     fn test_breaking_machine_1() {
         let (m, buttons, _) = parse("[##..] (1,3) (1) (1,2) (0,1) (2,3) {13,66,31,27}");
         assert_eq!(1, fewest_presses(m, buttons));
+    }
+
+    #[test]
+    fn test_joltage_apply() {
+        let mut joltage = vec![1,0,0,1];
+        let joltage =  apply_joltage(joltage, &[0, 1, 1, 0]);
+        assert_eq!(joltage, [1, 1, 1, 1])
     }
 
 }
