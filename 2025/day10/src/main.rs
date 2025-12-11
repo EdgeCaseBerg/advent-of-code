@@ -91,6 +91,24 @@ fn fewest_presses_with_joltage(_buttons: Vec<Vec<u8>>, _jolt_goal: Vec<usize>) -
      *  0a 0b = 1 jolt
      *
      * Which is REALLY similar to matrices in linear algebra.
+     * since you can never DECREASE the joltage, it only EVER goes up, then this is likke
+     *
+     * 1a + 0b = 1
+     * 0a + 1b = 1
+     *
+     * And for a more complicated example, 
+     * [ [1, 0 ], [1, 1] ]   [ 3, 2]
+     *
+     * a = 3
+     * a + b = 2
+     *
+     * which of course trivially rduces down to press b1 once, b2 twice but... what about the case
+     * of:
+     * [ [1, 0 ], [1, 1], [ 0, 1]]   [ 3, 2]
+     *
+     * this has MORE than 1 way to get to 3,2 and if we want to hit on the min b2 + b1, and not land
+     * on b1 + b1 + b2 + b3 or some other combination, then we need to figure out how to get the smallest
+     * one of these.
      */
     usize::MAX
 }
