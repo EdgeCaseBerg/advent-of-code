@@ -130,33 +130,6 @@ fn machine_done(machine: &Vec<u8>, goal: &Vec<u8>) -> bool {
     true
 }
 
-fn apply_joltage(mut joltage: Vec<usize>, button_click: &[u8]) -> Vec<usize> {
-    for i in 0..joltage.len() {
-        if button_click[i] == 1 {
-            joltage[i] += 1;
-        }
-    }
-    joltage
-}
-
-fn joltage_matches(joltage: &Vec<usize>, goal: &Vec<usize>) -> bool {
-    for i in 0..joltage.len() {
-        if joltage[i] != goal[i] {
-            return false
-        }
-    }
-    true
-}
-
-fn joltage_invalid(joltage: &Vec<usize>, goal: &Vec<usize>) -> bool {
-    for i in 0..joltage.len() {
-        if joltage[i] > goal[i] {
-            return true;
-        }
-    }
-    return false;
-}
-
 fn fewest_presses_with_joltage(buttons: Vec<Vec<u8>>, jolt_goal: Vec<usize>) -> usize {
     /* The input comes in like this:
      * [ [1, 0], [0,1] ]      [1, 1]
@@ -257,8 +230,8 @@ fn gauss_it_up(matrix: Vec<Vec<f64>>, variable_count: usize) -> Vec<usize> {
             if row >= rows {
                 break;
             }
-            if normalized_matrix[row][col].abs() > 1e-9 {
-                if best_row == usize::MAX || (normalized_matrix[row][col].abs() - 1.0).abs() < 1e-9 {
+            if normalized_matrix[row][col].abs() > 1e-12 {
+                if best_row == usize::MAX || (normalized_matrix[row][col].abs() - 1.0).abs() < 1e-12 {
                     best_row = row;
 
                     if normalized_matrix[row][col].abs() == 1.0 {
@@ -338,6 +311,7 @@ fn gauss_it_up(matrix: Vec<Vec<f64>>, variable_count: usize) -> Vec<usize> {
             let col = pivol_column[r];
             let rounded = normalized_matrix[r][columns - 1].round();
             if (rounded - normalized_matrix[r][columns - 1]).abs() > 1e-3 || rounded < 0.0 {
+                println!("no solution sadge {:?}", matrix);
                 return Vec::new();
             }
             solution[col] = rounded as usize;
@@ -368,7 +342,7 @@ fn solve_for_free_variables(
 
     // max free variable = max RHS, capped at something small-ish
     let max_target: f64 = normalized.iter().fold(0.0, |acc, row| acc.max(row[joltage_column]));
-    let max_free_variable_value = max_target.min(500.0); // 100 was too little, 500 seems ok.
+    let max_free_variable_value = max_target.floor().min(501.0); // 100 was too little, 500 seems ok.
 
     let mut current_solution = vec![0usize; variable_count];
     let mut min_sum_found = usize::MAX;
