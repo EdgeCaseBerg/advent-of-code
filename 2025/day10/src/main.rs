@@ -230,8 +230,8 @@ fn gauss_it_up(matrix: Vec<Vec<f64>>, variable_count: usize) -> Vec<usize> {
             if row >= rows {
                 break;
             }
-            if normalized_matrix[row][col].abs() > 1e-12 {
-                if best_row == usize::MAX || (normalized_matrix[row][col].abs() - 1.0).abs() < 1e-12 {
+            if normalized_matrix[row][col].abs() > 1e-4 {
+                if best_row == usize::MAX || (normalized_matrix[row][col].abs() - 1.0).abs() < 1e-4 {
                     best_row = row;
 
                     if normalized_matrix[row][col].abs() == 1.0 {
@@ -258,7 +258,7 @@ fn gauss_it_up(matrix: Vec<Vec<f64>>, variable_count: usize) -> Vec<usize> {
 
         /* DONT FORGET TO NORMALIZE! */
         let pivot = normalized_matrix[pivot_row][col];
-        if pivot.abs() > 1e-9 && (pivot - 1.0).abs() > 1e-9 {
+        if pivot.abs() > 1e-4 && (pivot - 1.0).abs() > 1e-4 {
             for c in 0..columns {
                 normalized_matrix[pivot_row][c] /= pivot;
             }
@@ -267,7 +267,7 @@ fn gauss_it_up(matrix: Vec<Vec<f64>>, variable_count: usize) -> Vec<usize> {
 
         /* We can now elimate this column in other rows */
         for r in 0..rows {
-            if r != pivot_row && normalized_matrix[r][col].abs() > 1e-9{
+            if r != pivot_row && normalized_matrix[r][col].abs() > 1e-4{
                 let factor = normalized_matrix[r][col];
                 for c in 0..columns {
                     normalized_matrix[r][c] -= factor * normalized_matrix[pivot_row][c];
@@ -285,7 +285,7 @@ fn gauss_it_up(matrix: Vec<Vec<f64>>, variable_count: usize) -> Vec<usize> {
      * if we DO need to that, then check that each number is greater than 0.
      */
     for r in pivot_row..rows {
-        if normalized_matrix[r][columns - 1].abs() > 1e-9 {
+        if normalized_matrix[r][columns - 1].abs() > 1e-4 {
             println!("no solution found something is probably wrong");
             return Vec::new(); // no solution
         }
@@ -310,7 +310,7 @@ fn gauss_it_up(matrix: Vec<Vec<f64>>, variable_count: usize) -> Vec<usize> {
         for r in 0..pivot_row {
             let col = pivol_column[r];
             let rounded = normalized_matrix[r][columns - 1].round();
-            if (rounded - normalized_matrix[r][columns - 1]).abs() > 1e-3 || rounded < 0.0 {
+            if (rounded - normalized_matrix[r][columns - 1]).abs() > 1e-4 || rounded < 0.0 {
                 println!("no solution sadge {:?}", matrix);
                 return Vec::new();
             }
@@ -398,14 +398,14 @@ fn enumerate_free_vars(
             for c in 0..variable_count {
                 if c != col {
                     let coeff = normalized[r][c];
-                    if coeff.abs() > 1e-9 {
+                    if coeff.abs() > 1e-4 {
                         value -= coeff * sol[c] as f64;
                     }
                 }
             }
 
             let rounded = value.round();
-            if (value - rounded).abs() > 1e-3 {
+            if (value - rounded).abs() > 1e-4 {
                 return; // invalid
             }
             if rounded < 0.0 {
