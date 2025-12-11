@@ -157,9 +157,6 @@ fn joltage_invalid(joltage: &Vec<usize>, goal: &Vec<usize>) -> bool {
     return false;
 }
 
-
-
-
 fn fewest_presses_with_joltage(buttons: Vec<Vec<u8>>, jolt_goal: Vec<usize>) -> usize {
     /* The input comes in like this:
      * [ [1, 0], [0,1] ]      [1, 1]
@@ -197,21 +194,21 @@ fn fewest_presses_with_joltage(buttons: Vec<Vec<u8>>, jolt_goal: Vec<usize>) -> 
      */
     let height = jolt_goal.len();
     let width = 1 + buttons.len(); // 1 + because it's a + b = c and we need space for c in the matrix.
-    let mut matrix: Vec<Vec<i32>> = Vec::new();
+    let mut matrix: Vec<Vec<f64>> = Vec::new();
     for _ in 0..height {
-        let row = vec![0i32; width];
+        let row = vec![0f64; width];
         matrix.push(row);
     }
 
     for (r, coefficient) in jolt_goal.into_iter().enumerate() {
-        matrix[r][width - 1] = coefficient as i32;
+        matrix[r][width - 1] = coefficient as f64;
     }
 
     for b in 0..buttons.len() {
         let button = &buttons[b];
         for (c, affects) in button.iter().enumerate() {
             if *affects == 1  {
-                matrix[c][b] = 1;
+                matrix[c][b] = 1.0;
             }
         }
     }
@@ -222,7 +219,7 @@ fn fewest_presses_with_joltage(buttons: Vec<Vec<u8>>, jolt_goal: Vec<usize>) -> 
     presses.iter().sum()
 }
 
-fn gauss_it_up(matrix: Vec<Vec<i32>>, variable_count: usize) -> Vec<usize> {
+fn gauss_it_up(matrix: Vec<Vec<f64>>, variable_count: usize) -> Vec<usize> {
     /* Matrices are hard. I kind of feel like grabbing a library to do this sort
      * of thing would PROBABLY be the better option here. But eh. Let's see if we
      * can figure it out.
@@ -233,7 +230,7 @@ fn gauss_it_up(matrix: Vec<Vec<i32>>, variable_count: usize) -> Vec<usize> {
     let rows = matrix.len();
     let columns = matrix[0].len();
 
-    let mut normalized_matrix: Vec<Vec<i32>> = Vec::new();
+    let mut normalized_matrix: Vec<Vec<f64>> = Vec::new();
     for r in 0..rows {
         normalized_matrix.push(Vec::new());
         for c in 0..columns {
@@ -249,7 +246,7 @@ fn gauss_it_up(matrix: Vec<Vec<i32>>, variable_count: usize) -> Vec<usize> {
     let mut col = 0;
     loop {
         /* I dont remember how to for (x=y;condition;++) in rust */
-        if col >= variable_count && pivot_row >= rows {
+        if col >= variable_count || pivot_row >= rows {
             break;
         }
 
@@ -260,10 +257,11 @@ fn gauss_it_up(matrix: Vec<Vec<i32>>, variable_count: usize) -> Vec<usize> {
             if row >= rows {
                 break;
             }
-            if normalized_matrix[row][col] != 0 {
-                if best_row == usize::MAX || normalized_matrix[row][col].abs() == 1 {
+            if normalized_matrix[row][col].abs() > 1e-9 {
+                if best_row == usize::MAX || (normalized_matrix[row][col].abs() - 1.0).abs() < 1e-9 {
                     best_row = row;
-                    if normalized_matrix[row][col].abs() == 1 {
+
+                    if normalized_matrix[row][col].abs() == 1.0 {
                         break;
                     }
                 }
@@ -285,9 +283,18 @@ fn gauss_it_up(matrix: Vec<Vec<i32>>, variable_count: usize) -> Vec<usize> {
         pivol_column[pivot_row] = col;
         is_pivot_column_tracker[col] = true;
 
+        /* DONT FORGET TO NORMALIZE! */
+        let pivot = normalized_matrix[pivot_row][col];
+        if pivot.abs() > 1e-9 && (pivot - 1.0).abs() > 1e-9 {
+            for c in 0..columns {
+                normalized_matrix[pivot_row][c] /= pivot;
+            }
+        }
+
+
         /* We can now elimate this column in other rows */
         for r in 0..rows {
-            if row != pivot_row && normalized_matrix[r][col] != 0 {
+            if r != pivot_row && normalized_matrix[r][col].abs() > 1e-9{
                 let factor = normalized_matrix[r][col];
                 for c in 0..columns {
                     normalized_matrix[r][c] -= factor * normalized_matrix[pivot_row][c];
@@ -299,7 +306,6 @@ fn gauss_it_up(matrix: Vec<Vec<i32>>, variable_count: usize) -> Vec<usize> {
         /* Don't forget to bump the "for loop" variables up and also shift the pivot row to the next row */
         pivot_row += 1;
         col += 1;
-        break;
     }
 
     /* Assume that all inputs have a solution, so don't bother checking consistency 
@@ -322,7 +328,7 @@ fn gauss_it_up(matrix: Vec<Vec<i32>>, variable_count: usize) -> Vec<usize> {
         for r in 0..pivot_row {
             let col = pivol_column[r];
             let value = normalized_matrix[r][columns - 1];
-            if value < 0 || (value - normalized_matrix[r][columns - 1]).abs() > 0 {
+            if value < 0.0 || (value - normalized_matrix[r][columns - 1]).abs() > 1e-3 {
                 println!("No solution it seems?");
                 return Vec::new();
             }
@@ -345,21 +351,121 @@ fn gauss_it_up(matrix: Vec<Vec<i32>>, variable_count: usize) -> Vec<usize> {
 
 fn solve_for_free_variables(
     free_vars: Vec<usize>,
-    normalized: &Vec<Vec<i32>>,
+    normalized: &Vec<Vec<f64>>,
     pivol_column: &Vec<usize>,
     pivot_row: usize,
     variable_count: usize,
 ) -> Vec<usize> {
+    let joltage_column = normalized[0].len() - 1;
 
-    // let max_target = matrix.iter().map(|row| row[columns - 1]).max();
-    // let max_free_variable_value = max_target.min(500) // 100 was too little, 500 seems ok.
+    // max free variable = max RHS, capped at something small-ish
+    let max_target: f64 = normalized.iter().fold(0.0, |acc, row| acc.max(row[joltage_column]));
+    let max_free_variable_value = max_target.min(500.0); // 100 was too little, 500 seems ok.
 
-    // let mut min_solution = Vec::new();
-    // let mut min_sum_found = i32:MAX;
+    let mut current_solution = vec![0usize; variable_count];
+    let mut min_sum_found = usize::MAX;
+    let mut min_solution = None;
 
-    Vec::new()
+    enumerate_free_vars(
+        0,
+        &free_vars,
+        normalized,
+        pivol_column,
+        pivot_row,
+        variable_count,
+        joltage_column,
+        max_free_variable_value as usize,
+        &mut current_solution,
+        0,
+        &mut min_sum_found,
+        &mut min_solution,
+    );
+
+    min_solution.unwrap_or_else(|| vec![0; variable_count])
 }
 
+/* This is complicated... internet solution found in the wilds */
+fn enumerate_free_vars(
+    idx: usize,
+    free_vars: &Vec<usize>,
+    normalized: &Vec<Vec<f64>>,
+    pivot_col: &Vec<usize>,
+    pivot_row_count: usize,
+    variable_count: usize,
+    rhs_col: usize,
+    max_free_value: usize,
+    current_solution: &mut Vec<usize>,
+    current_sum: usize,
+    min_sum: &mut usize,
+    best_solution: &mut Option<Vec<usize>>,
+) {
+    // prune
+    if current_sum >= *min_sum {
+        return;
+    }
+
+    // if we've assigned all free variables → do back-substitution for pivot variables
+    if idx == free_vars.len() {
+        let mut sol = current_solution.clone();
+        let rows = pivot_row_count;
+
+        for r in (0..rows).rev() {
+            let col = pivot_col[r];
+            // subtract contributions from all other variables
+            let mut value = normalized[r][rhs_col];
+            for c in 0..variable_count {
+                if c != col {
+                    let coeff = normalized[r][c];
+                    if coeff.abs() > 1e-9 {
+                        value -= coeff * sol[c] as f64;
+                    }
+                }
+            }
+
+            let rounded = value.round();
+            if (value - rounded).abs() > 1e-3 {
+                return; // invalid
+            }
+            if rounded < 0.0 {
+                return; // invalid
+            }
+            sol[col] = rounded as usize;
+        }
+
+        // evaluate total presses
+        let sum: usize = sol.iter().sum();
+        if sum < *min_sum {
+            *min_sum = sum;
+            *best_solution = Some(sol);
+        }
+
+        return;
+    }
+
+    // otherwise enumerate values for the current free variable
+    let free_var = free_vars[idx];
+
+    for val in 0..=max_free_value {
+        current_solution[free_var] = val;
+
+        enumerate_free_vars(
+            idx + 1,
+            free_vars,
+            normalized,
+            pivot_col,
+            pivot_row_count,
+            variable_count,
+            rhs_col,
+            max_free_value,
+            current_solution,
+            current_sum + val,
+            min_sum,
+            best_solution,
+        );
+    }
+
+    current_solution[free_var] = 0; // reset for cleanliness
+}
 
 
 #[cfg(test)]
