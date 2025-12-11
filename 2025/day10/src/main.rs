@@ -310,6 +310,15 @@ fn gauss_it_up(matrix: Vec<Vec<f64>>, variable_count: usize) -> Vec<usize> {
 
     /* Assume that all inputs have a solution, so don't bother checking consistency 
      * if we DO need to that, then check that each number is greater than 0.
+     */
+    for r in pivot_row..rows {
+        if normalized_matrix[r][columns - 1].abs() > 1e-9 {
+            println!("no solution found something is probably wrong");
+            return Vec::new(); // no solution
+        }
+    }
+
+    /*
      * So now, we need to know about the variables that are floating around that we'll
      * need to try to determine.
      */
@@ -327,12 +336,11 @@ fn gauss_it_up(matrix: Vec<Vec<f64>>, variable_count: usize) -> Vec<usize> {
         let mut solution = vec![0usize; variable_count];
         for r in 0..pivot_row {
             let col = pivol_column[r];
-            let value = normalized_matrix[r][columns - 1];
-            if value < 0.0 || (value - normalized_matrix[r][columns - 1]).abs() > 1e-3 {
-                println!("No solution it seems?");
+            let rounded = normalized_matrix[r][columns - 1].round();
+            if (rounded - normalized_matrix[r][columns - 1]).abs() > 1e-3 || rounded < 0.0 {
                 return Vec::new();
             }
-            solution[col] = value as usize;
+            solution[col] = rounded as usize;
         }
         return solution;
     }
