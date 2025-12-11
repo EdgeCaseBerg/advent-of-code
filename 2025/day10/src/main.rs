@@ -197,14 +197,14 @@ fn fewest_presses_with_joltage(buttons: Vec<Vec<u8>>, jolt_goal: Vec<usize>) -> 
      */
     let height = jolt_goal.len();
     let width = 1 + buttons.len(); // 1 + because it's a + b = c and we need space for c in the matrix.
-    let mut matrix: Vec<Vec<usize>> = Vec::new();
+    let mut matrix: Vec<Vec<i32>> = Vec::new();
     for _ in 0..height {
-        let row = vec![0usize; width];
+        let row = vec![0i32; width];
         matrix.push(row);
     }
 
     for (r, coefficient) in jolt_goal.into_iter().enumerate() {
-        matrix[r][width - 1] = coefficient;
+        matrix[r][width - 1] = coefficient as i32;
     }
 
     for b in 0..buttons.len() {
@@ -222,7 +222,141 @@ fn fewest_presses_with_joltage(buttons: Vec<Vec<u8>>, jolt_goal: Vec<usize>) -> 
     presses.iter().sum()
 }
 
-fn gauss_it_up(matrix: Vec<Vec<usize>>, number_variabels: usize) -> Vec<usize> {
+fn gauss_it_up(matrix: Vec<Vec<i32>>, variable_count: usize) -> Vec<usize> {
+    /* Matrices are hard. I kind of feel like grabbing a library to do this sort
+     * of thing would PROBABLY be the better option here. But eh. Let's see if we
+     * can figure it out.
+     * 
+     * First off, our matrix isn't in the normalized form we need to do solving.
+     * So, first we need to put it into that!
+     */
+    let rows = matrix.len();
+    let columns = matrix[0].len();
+
+    let mut normalized_matrix: Vec<Vec<i32>> = Vec::new();
+    for r in 0..rows {
+        normalized_matrix.push(Vec::new());
+        for c in 0..columns {
+            normalized_matrix[r].push(matrix[r][c]);
+        }
+    }
+
+    /* We need to find the pivot of the matrix */
+    let mut pivot_row = 0;
+    let mut pivol_column = vec![usize::MAX; rows];
+    let mut is_pivot_column_tracker = vec![false; variable_count];
+
+    let mut col = 0;
+    loop {
+        /* I dont remember how to for (x=y;condition;++) in rust */
+        if col >= variable_count && pivot_row >= rows {
+            break;
+        }
+
+        let mut row = pivot_row;
+        let mut best_row = usize::MAX;
+
+        loop {
+            if row >= rows {
+                break;
+            }
+            if normalized_matrix[row][col] != 0 {
+                if best_row == usize::MAX || normalized_matrix[row][col].abs() == 1 {
+                    best_row = row;
+                    if normalized_matrix[row][col].abs() == 1 {
+                        break;
+                    }
+                }
+            }
+
+            row += 1;
+        }
+
+        /* No best row found, so check the next one. */
+        if best_row == usize::MAX {
+            col += 1;
+            continue;
+        }
+
+        /* Rust has a swap! no clone() or anything :)  */
+        normalized_matrix.swap(best_row, pivot_row);
+
+        /* Track the pivot, and then... */
+        pivol_column[pivot_row] = col;
+        is_pivot_column_tracker[col] = true;
+
+        /* We can now elimate this column in other rows */
+        for r in 0..rows {
+            if row != pivot_row && normalized_matrix[r][col] != 0 {
+                let factor = normalized_matrix[r][col];
+                for c in 0..columns {
+                    normalized_matrix[r][c] -= factor * normalized_matrix[pivot_row][c];
+                }
+            }
+        }
+
+
+        /* Don't forget to bump the "for loop" variables up and also shift the pivot row to the next row */
+        pivot_row += 1;
+        col += 1;
+        break;
+    }
+
+    /* Assume that all inputs have a solution, so don't bother checking consistency 
+     * if we DO need to that, then check that each number is greater than 0.
+     * So now, we need to know about the variables that are floating around that we'll
+     * need to try to determine.
+     */
+    let mut free_variables = vec![];
+    for c in 0..variable_count {
+        if !is_pivot_column_tracker[c] {
+            free_variables.push(c);
+        }
+    }
+
+    /* If every variable is already bound, then we can check to see if we can return early
+     * without having to do any extra work:
+     */
+    if free_variables.is_empty() {
+        let mut solution = vec![0usize; variable_count];
+        for r in 0..pivot_row {
+            let col = pivol_column[r];
+            let value = normalized_matrix[r][columns - 1];
+            if value < 0 || (value - normalized_matrix[r][columns - 1]).abs() > 0 {
+                println!("No solution it seems?");
+                return Vec::new();
+            }
+            solution[col] = value as usize;
+        }
+        return solution;
+    }
+
+    /* But if we DO have a system of equations that has free variables, then we need to 
+     * search in the space of the potential values for those for something that works
+     * but since numbers are infinity, we'll constrain it arbitrarily based on if the AoC
+     * puzzle tells us if the number is too low or high.
+     * We can smartly constrain the maximum number of presses down to the sum of all the
+     * potential joltage targets since if we go past that the solution is garbage:
+    */
+    let maybe_solution = solve_for_free_variables(free_variables, &normalized_matrix, &pivol_column, pivot_row, variable_count);
+
+    maybe_solution
+}
+
+fn solve_for_free_variables(
+    free_vars: Vec<usize>,
+    normalized: &Vec<Vec<i32>>,
+    pivol_column: &Vec<usize>,
+    pivot_row: usize,
+    variable_count: usize,
+) -> Vec<usize> {
+
+    // let max_target = matrix.iter().map(|row| row[columns - 1]).max();
+    // let max_free_variable_value = max_target.min(500) // 100 was too little, 500 seems ok.
+
+    // let mut min_solution = Vec::new();
+    // let mut min_sum_found = i32:MAX;
+
     Vec::new()
 }
 
