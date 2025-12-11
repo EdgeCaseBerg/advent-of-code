@@ -210,22 +210,20 @@ fn fewest_presses_with_joltage(buttons: Vec<Vec<u8>>, jolt_goal: Vec<usize>) -> 
     for b in 0..buttons.len() {
         let button = &buttons[b];
         for (c, affects) in button.iter().enumerate() {
-            println!("{:?} {:?}-> {:?} {:?}", c, affects, b, button);
             if *affects == 1  {
                 matrix[c][b] = 1;
             }
         }
-        // println!("{:?}", matrix);
-        println!("...");
     }
 
-    for row in matrix.iter() {
-        println!("{:?}", row);    
-    }
-    
+    // we'll get back how many presses of each button needs to happen
+    // so the total presses is just heir sum
+    let presses = gauss_it_up(matrix, buttons.len());
+    presses.iter().sum()
+}
 
-
-    usize::MAX
+fn gauss_it_up(matrix: Vec<Vec<usize>>, number_variabels: usize) -> Vec<usize> {
+    Vec::new()
 }
 
 
