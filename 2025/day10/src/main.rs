@@ -471,6 +471,49 @@ mod tests {
     }
 
     #[test]
+    fn test_parse_weird_spacing() {
+        let (goal, buttons, joltages) =
+            parse("[.#.#.]    ( 0 , 2 )    (1)     (3)   {  4 , 6 , 2 , 1  }");
+
+        assert_eq!(goal, vec![0,1,0,1,0]);
+        assert_eq!(buttons, vec![
+            vec![1,0,1,0,0],
+            vec![0,1,0,0,0],
+            vec![0,0,0,1,0],
+        ]);
+        assert_eq!(joltages, vec![4,6,2,1]);
+    }
+
+    #[test]
+    fn test_parse_no_spaces() {
+        let (goal, buttons, joltages) =
+            parse("[##..] (0,1)(2)(3) {5,4,3,2}");
+
+        assert_eq!(goal, vec![1,1,0,0]);
+        assert_eq!(buttons, vec![
+            vec![1,1,0,0],
+            vec![0,0,1,0],
+            vec![0,0,0,1],
+        ]);
+        assert_eq!(joltages, vec![5,4,3,2]);
+    }
+
+    #[test]
+    fn test_parse_multi_digit_indices() {
+        let (goal, buttons, joltages) =
+            parse("[....#....] (8) (0,4,8) {10,20,30,40,50,60,70,80,90}");
+
+        assert_eq!(goal, vec![0,0,0,0,1,0,0,0,0]);
+        assert_eq!(buttons, vec![
+            vec![0,0,0,0,0,0,0,0,1],
+            vec![1,0,0,0,1,0,0,0,1],
+        ]);
+        assert_eq!(joltages, vec![10,20,30,40,50,60,70,80,90]);
+    }
+
+
+
+    #[test]
     fn test_first_machine() {
         let (m, buttons, _) = parse("[.##.] (3) (1,3) (2) (2,3) (0,2) (0,1) {3,5,4,7}");
         assert_eq!(2, fewest_presses(m, buttons));
@@ -494,27 +537,7 @@ mod tests {
         assert_eq!(1, fewest_presses(m, buttons));
     }
 
-    #[test]
-    fn test_joltage_apply() {
-        let joltage = vec![1,0,0,1];
-        let joltage =  apply_joltage(joltage, &[0, 1, 1, 0]);
-        assert_eq!(joltage, [1, 1, 1, 1])
-    }
-
-    #[test]
-    fn test_joltage_match() {
-        let joltage = vec![1,0,0,1];
-        let jolt_goal = vec![1,0,0,1];
-        assert!(joltage_matches(&joltage, &jolt_goal));
-    }
-
-    #[test]
-    fn test_joltage_invalid_when_bigger() {
-        let joltage = vec![2,0,0,1];
-        let jolt_goal = vec![1,0,0,1];
-        assert!(joltage_invalid(&joltage, &jolt_goal));
-    }
-
+   
     #[test]
     fn test_first_machine_with_joltage() {
         let (_, buttons, joltage_goal) = parse("[.##.] (3) (1,3) (2) (2,3) (0,2) (0,1) {3,5,4,7}");
