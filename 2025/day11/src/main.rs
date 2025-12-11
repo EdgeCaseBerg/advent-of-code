@@ -1,6 +1,6 @@
 use std::fs;
 use std::time::Instant;
-use std::collections::HashSet;
+use std::collections::{HashMap, VecDeque};
 
 fn main() {
     let raw_data = fs::read_to_string("./input").expect("bad input data");
@@ -18,19 +18,49 @@ fn main() {
     println!("Took: {:?}", time);
 }
 
+
 type ResultType = i64;
+
 fn p1(raw_data: &str) -> ResultType {
-    let mut input: Vec<(&str, &str)> = Vec::new();
-    raw_data.lines().take_while(|line| !line.is_empty()).for_each(|line| {
-        let mut parts = line.split(" ");
-        let left = parts.next().unwrap().split_once(':').unwrap().0;
-        for right in parts {
-            input.push((left, right));
+    // Parse into adjacency list: "aaa" => vec!["you", "hhh"]
+    let mut graph: HashMap<&str, Vec<&str>> = HashMap::new();
+
+    for line in raw_data.lines().filter(|l| !l.is_empty()) {
+        let (left, rest) = line.split_once(':').unwrap();
+        let rights: Vec<&str> = rest.split_whitespace().collect();
+        graph.insert(left, rights);
+    }
+
+    // We're just doing DFS
+    let mut stack: Vec<Vec<&str>> = Vec::new();
+    stack.push(vec!["you"]);
+
+    let mut count: ResultType = 0;
+
+    while let Some(path) = stack.pop() {
+        let last = path[path.len() - 1];
+
+        // If we reached "out", count this path
+        if last == "out" {
+            count += 1;
+            continue;
         }
-    });
-    println!("{:?}", input);
-    0
+
+        // Otherwise explore neighbors
+        if let Some(next_nodes) = graph.get(last) {
+            for &next in next_nodes {
+                if !path.contains(&next) {
+                    let mut new_path = path.clone();
+                    new_path.push(next);
+                    stack.push(new_path);
+                }
+            }
+        }
+    }
+
+    count
 }
+
 
 fn p2(_raw_data: &str) -> ResultType {
     0
