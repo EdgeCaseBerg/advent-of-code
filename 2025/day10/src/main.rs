@@ -80,72 +80,6 @@ fn parse(line: &str) -> (Vec<u8>, Vec<Vec<u8>>, Vec<usize>) {
     (goal, buttons, joltages)
 }
 
-
-fn fewest_presses_with_joltage(buttons: Vec<Vec<u8>>, jolt_goal: Vec<usize>) -> usize {
-    /* The input comes in like this:
-     * [ [1, 0], [0,1] ]      [1, 1]
-     * and then the goal is to know we should press the buttons once each to make 
-     * the initial state of [0,0] become [1, 1]. So, this is sorta like this:
-     * 
-     *  1a 0b = 1 jolt
-     *  0a 0b = 1 jolt
-     *
-     * Which is REALLY similar to matrices in linear algebra.
-     * since you can never DECREASE the joltage, it only EVER goes up, then this is likke
-     *
-     * 1a + 0b = 1
-     * 0a + 1b = 1
-     *
-     * And for a more complicated example, 
-     * [ [1, 0 ], [1, 1] ]   [ 3, 2]
-     *
-     * a = 3
-     * a + b = 2
-     *
-     * which of course trivially rduces down to press b1 once, b2 twice but... what about the case
-     * of:
-     * [ [1, 0 ], [1, 1], [ 0, 1]]   [ 3, 2]
-     *
-     * this has MORE than 1 way to get to 3,2 and if we want to hit on the min b2 + b1, and not land
-     * on b1 + b1 + b2 + b3 or some other combination, then we need to figure out how to get the smallest
-     * one of these.
-     *
-     * We can never do a negative button press, so if we were to solve an question then we can toss out
-     * any unbounded variable that needs to get loved by someone who takes a more negative viewpoint of the world.
-     * 
-     * But first... convert the button input into a matrix since matrices are a good way to deal with 
-     * computing equations Linear algebra baby! one row per joltage output!
-     */
-    let height = jolt_goal.len();
-    let width = 1 + buttons.len(); // 1 + because it's a + b = c and we need space for c in the matrix.
-    let mut matrix: Vec<Vec<usize>> = Vec::new();
-    for _ in 0..height {
-        let row = vec![0usize; width];
-        matrix.push(row);
-    }
-
-    for (r, coefficient) in jolt_goal.into_iter().enumerate() {
-        matrix[r][width - 1] = coefficient;
-
-        for button in buttons.iter() {
-            println!("{:?}", button);
-            for (c, affects) in button.iter().enumerate() {
-                if *affects != 0 {
-                    matrix[r][c] = 1;
-                }
-            }
-            println!("{:?}", matrix);
-            println!("...");
-        }
-    }
-
-    println!("{:?}", matrix);
-
-
-    usize::MAX
-}
-
-
 fn fewest_presses(goal: Vec<u8>, buttons: Vec<Vec<u8>>) -> usize {
     let n = goal.len();
     let start = vec![0u8; n];
@@ -222,6 +156,78 @@ fn joltage_invalid(joltage: &Vec<usize>, goal: &Vec<usize>) -> bool {
     }
     return false;
 }
+
+
+
+
+fn fewest_presses_with_joltage(buttons: Vec<Vec<u8>>, jolt_goal: Vec<usize>) -> usize {
+    /* The input comes in like this:
+     * [ [1, 0], [0,1] ]      [1, 1]
+     * and then the goal is to know we should press the buttons once each to make 
+     * the initial state of [0,0] become [1, 1]. So, this is sorta like this:
+     * 
+     *  1a 0b = 1 jolt
+     *  0a 0b = 1 jolt
+     *
+     * Which is REALLY similar to matrices in linear algebra.
+     * since you can never DECREASE the joltage, it only EVER goes up, then this is likke
+     *
+     * 1a + 0b = 1
+     * 0a + 1b = 1
+     *
+     * And for a more complicated example, 
+     * [ [1, 0 ], [1, 1] ]   [ 3, 2]
+     *
+     * a = 3
+     * a + b = 2
+     *
+     * which of course trivially rduces down to press b1 once, b2 twice but... what about the case
+     * of:
+     * [ [1, 0 ], [1, 1], [ 0, 1]]   [ 3, 2]
+     *
+     * this has MORE than 1 way to get to 3,2 and if we want to hit on the min b2 + b1, and not land
+     * on b1 + b1 + b2 + b3 or some other combination, then we need to figure out how to get the smallest
+     * one of these.
+     *
+     * We can never do a negative button press, so if we were to solve an question then we can toss out
+     * any unbounded variable that needs to get loved by someone who takes a more negative viewpoint of the world.
+     * 
+     * But first... convert the button input into a matrix since matrices are a good way to deal with 
+     * computing equations Linear algebra baby! one row per joltage output!
+     */
+    let height = jolt_goal.len();
+    let width = 1 + buttons.len(); // 1 + because it's a + b = c and we need space for c in the matrix.
+    let mut matrix: Vec<Vec<usize>> = Vec::new();
+    for _ in 0..height {
+        let row = vec![0usize; width];
+        matrix.push(row);
+    }
+
+    for (r, coefficient) in jolt_goal.into_iter().enumerate() {
+        matrix[r][width - 1] = coefficient;
+    }
+
+    for b in 0..buttons.len() {
+        let button = &buttons[b];
+        for (c, affects) in button.iter().enumerate() {
+            println!("{:?} {:?}-> {:?} {:?}", c, affects, b, button);
+            if *affects == 1  {
+                matrix[c][b] = 1;
+            }
+        }
+        // println!("{:?}", matrix);
+        println!("...");
+    }
+
+    for row in matrix.iter() {
+        println!("{:?}", row);    
+    }
+    
+
+
+    usize::MAX
+}
+
 
 
 #[cfg(test)]
