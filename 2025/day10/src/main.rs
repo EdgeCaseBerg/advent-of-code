@@ -556,4 +556,32 @@ mod tests {
         assert_eq!(11, fewest_presses_with_joltage(buttons, joltage_goal));
     }
 
+    #[test]
+    fn test_episilon_problem_machine_1_with_joltage() {
+        let (_, buttons, joltage_goal) = parse("[####] (0,1) (0,2,3) (2,3) {27,15,16,16}");
+        assert_eq!(31, fewest_presses_with_joltage(buttons, joltage_goal));
+    }
+
+    #[test]
+    fn test_episilon_problem_machine_2_with_joltage() {
+        let (_, buttons, joltage_goal) = parse("[.###] (2,3) (1,3) (0) (3) (0,2) (0,3) {187,1,28,28}");
+        assert_eq!(188, fewest_presses_with_joltage(buttons, joltage_goal));
+    }
+
+    #[test]
+    fn test_episilon_problem_machine_3_with_joltage() {
+        let (_, buttons, joltage_goal) = parse("[#.###..#] (0,1,2,3,4,6) (0,1,2,3,6,7) (0,1,2,4,6,7) (0,1,3,4,5) (0,2,6) (0,2,7) {70,41,50,29,39,20,32,32}");
+        assert_eq!(70, fewest_presses_with_joltage(buttons, joltage_goal));
+    }
+
+    #[test]
+    fn test_episilon_problem_machine_4_with_joltage() {
+        let (_, buttons, joltage_goal) = parse("[##....#...] (2,3,4,5,6,7) (0,1,2,3,4,6,9) (0,1,3,4,6,8,9) (1,2,3,4,6) (1,4,5,6,8,9) (2,4,5,8,9) (0,1,3,4,5,8,9) (0,1,2,6) (2,7,8,9) (1,2,4,8) (3,4,6,7,8,9) (0,2,5,7,8) (0,1,2,4,5,6,8,9) {79,95,119,80,137,88,128,63,122,126}");
+        assert_eq!(164, fewest_presses_with_joltage(buttons, joltage_goal));
+    }
+
+    
+
+
+
 }
