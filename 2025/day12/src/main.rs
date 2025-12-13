@@ -24,12 +24,19 @@ fn p1(_raw_data: &str) -> ResultType {
 }
 
 #[derive(Debug)]
-struct Shape<'a> {
+struct Shape {
     index: u8,
     shape: [[usize; 3]; 3]
 }
 
+struct Region {
+    width: u8,
+    height: u8,
+    quantity_to_fit_per_shape: [usize; 6]
+}
+
 // TODO: define rotate/flip functions and such
+
 
 
 fn p2(_raw_data: &str) -> ResultType {
