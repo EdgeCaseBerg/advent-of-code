@@ -29,13 +29,60 @@ struct Shape {
     shape: [[usize; 3]; 3]
 }
 
+impl Shape {
+    fn from(string: &str, idx: u8) -> Shape {
+        let mut s = Shape {
+            index: idx,
+            shape: [
+                [0, 0, 0],
+                [0, 0, 0],
+                [0, 0, 0]
+            ]
+        };
+
+        // Blog note: don't forget to use ! in front of line.is_empty 
+        let lines = string
+            .lines()
+            .take_while(|line| !line.is_empty())
+            .enumerate();
+
+        for (row, line) in lines {
+            for c in 0..3 {
+                s.shape[row][c] = if let Some(ch) = line.chars().nth(c) {
+                    if ch == '#' { 1 } else { 0 }
+                } else { 0 }
+            }
+        }
+
+        s
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse() {
+        let full = Shape::from("###\n###\n###", 0);
+        assert_eq!(full.shape, [[1,1,1],[1,1,1],[1,1,1]]);
+
+        let partial = Shape::from(".##\n#.#\n##.", 0);
+        assert_eq!(partial.shape, [[0,1,1],[1,0,1],[1,1,0]]);
+
+        let none = Shape::from("...\n...\n...", 0);
+        assert_eq!(none.shape, [[0,0,0],[0,0,0],[0,0,0]]);
+    }
+
+}
+
 struct Region {
     width: u8,
     height: u8,
     quantity_to_fit_per_shape: [usize; 6]
 }
 
-// TODO: define rotate/flip functions and such
+// TODO: define rotate/flip functions, overlaps?
 
 
 
