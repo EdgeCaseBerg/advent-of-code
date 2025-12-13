@@ -20,7 +20,13 @@ fn main() {
 type ResultType = i64;
 fn p1(raw_data: &str) -> ResultType {
     let shapes: Vec<Shape> = raw_data.split("\n\n").take(6).map(Shape::from).collect();
-    let regions: Vec<Region> = raw_data.lines().skip_while(|line| !line.contains("x")).map(Region::from).collect();
+    let regions: Vec<Region> = raw_data
+        .lines()
+        .skip_while(|line| !line.contains("x"))
+        .map(Region::from)
+        .collect();
+
+    println!("{:?}\n{:?}", shapes, regions);
 
     let mut regions_able_to_fit_all_presents = 0;
     for region in regions {
@@ -28,21 +34,20 @@ fn p1(raw_data: &str) -> ResultType {
             regions_able_to_fit_all_presents += 1;
         }
     }
-        
+
     regions_able_to_fit_all_presents
 }
 
 #[derive(Debug)]
 struct Shape {
     index: u8,
-    shape: [[usize; 3]; 3]
+    shape: [[usize; 3]; 3],
 }
 
 impl From<&str> for Shape {
     // Input is of the form, index:\n...\n###\n.... where # and . indicate shape or not
     fn from(string: &str) -> Shape {
-
-        // Blog note: don't forget to use ! in front of line.is_empty 
+        // Blog note: don't forget to use ! in front of line.is_empty
         let mut lines = string
             .lines()
             .take_while(|line| !line.is_empty())
@@ -52,18 +57,16 @@ impl From<&str> for Shape {
 
         let mut s = Shape {
             index: idx.parse().unwrap(),
-            shape: [
-                [0, 0, 0],
-                [0, 0, 0],
-                [0, 0, 0]
-            ]
+            shape: [[0, 0, 0], [0, 0, 0], [0, 0, 0]],
         };
 
         for (row, line) in lines {
             for c in 0..3 {
                 s.shape[row - 1][c] = if let Some(ch) = line.chars().nth(c) {
                     if ch == '#' { 1 } else { 0 }
-                } else { 0 }
+                } else {
+                    0
+                }
             }
         }
 
@@ -78,25 +81,24 @@ mod test_shapes {
     #[test]
     fn test_parse() {
         let full: Shape = "0:\n###\n###\n###".into();
-        assert_eq!(full.shape, [[1,1,1],[1,1,1],[1,1,1]]);
+        assert_eq!(full.shape, [[1, 1, 1], [1, 1, 1], [1, 1, 1]]);
         assert_eq!(full.index, 0);
 
         let partial: Shape = "1:\n.##\n#.#\n##.".into();
-        assert_eq!(partial.shape, [[0,1,1],[1,0,1],[1,1,0]]);
+        assert_eq!(partial.shape, [[0, 1, 1], [1, 0, 1], [1, 1, 0]]);
         assert_eq!(partial.index, 1);
 
         let none: Shape = "2:\n...\n...\n...".into();
-        assert_eq!(none.shape, [[0,0,0],[0,0,0],[0,0,0]]);
+        assert_eq!(none.shape, [[0, 0, 0], [0, 0, 0], [0, 0, 0]]);
         assert_eq!(none.index, 2);
     }
-
 }
 
 #[derive(Debug)]
 struct Region {
     width: u8,
     height: u8,
-    quantity_to_fit_per_shape: [usize; 6]
+    quantity_to_fit_per_shape: [usize; 6],
 }
 
 impl From<&str> for Region {
@@ -117,7 +119,7 @@ impl From<&str> for Region {
         Region {
             width: width.parse().unwrap(),
             height: height.parse().unwrap(),
-            quantity_to_fit_per_shape: counts
+            quantity_to_fit_per_shape: counts,
         }
     }
 }
@@ -142,36 +144,61 @@ mod test_regions {
         let region: Region = "40x42: 38 37 45 42 54 41".into();
         assert_eq!(region.width, 40);
         assert_eq!(region.height, 42);
-        assert_eq!(region.quantity_to_fit_per_shape, [38,37,45,42,54,41]);
+        assert_eq!(region.quantity_to_fit_per_shape, [38, 37, 45, 42, 54, 41]);
 
         let region: Region = "4x4: 38 37 45 42 54 41".into();
         assert_eq!(region.width, 4);
         assert_eq!(region.height, 4);
-        assert_eq!(region.quantity_to_fit_per_shape, [38,37,45,42,54,41]);
+        assert_eq!(region.quantity_to_fit_per_shape, [38, 37, 45, 42, 54, 41]);
     }
 
     fn example_regions() -> [Region; 3] {
         [
-            Region { 
-                width: 4, 
-                height: 4, 
-                quantity_to_fit_per_shape: [0, 0, 0, 0, 2, 0] 
+            Region {
+                width: 4,
+                height: 4,
+                quantity_to_fit_per_shape: [0, 0, 0, 0, 2, 0],
             },
-            Region { 
-                width: 12, 
-                height: 5, 
-                quantity_to_fit_per_shape: [1, 0, 1, 0, 2, 2]
-            }, 
             Region {
                 width: 12,
                 height: 5,
-                quantity_to_fit_per_shape: [1, 0, 1, 0, 3, 2] 
-            }
+                quantity_to_fit_per_shape: [1, 0, 1, 0, 2, 2],
+            },
+            Region {
+                width: 12,
+                height: 5,
+                quantity_to_fit_per_shape: [1, 0, 1, 0, 3, 2],
+            },
         ]
     }
 
     fn example_shapes() -> [Shape; 6] {
-        [Shape { index: 0, shape: [[1, 1, 1], [1, 1, 0], [1, 1, 0]] }, Shape { index: 1, shape: [[1, 1, 1], [1, 1, 0], [0, 1, 1]] }, Shape { index: 2, shape: [[0, 1, 1], [1, 1, 1], [1, 1, 0]] }, Shape { index: 3, shape: [[1, 1, 0], [1, 1, 1], [1, 1, 0]] }, Shape { index: 4, shape: [[1, 1, 1], [1, 0, 0], [1, 1, 1]] }, Shape { index: 5, shape: [[1, 1, 1], [0, 1, 0], [1, 1, 1]] }]
+        [
+            Shape {
+                index: 0,
+                shape: [[1, 1, 1], [1, 1, 0], [1, 1, 0]],
+            },
+            Shape {
+                index: 1,
+                shape: [[1, 1, 1], [1, 1, 0], [0, 1, 1]],
+            },
+            Shape {
+                index: 2,
+                shape: [[0, 1, 1], [1, 1, 1], [1, 1, 0]],
+            },
+            Shape {
+                index: 3,
+                shape: [[1, 1, 0], [1, 1, 1], [1, 1, 0]],
+            },
+            Shape {
+                index: 4,
+                shape: [[1, 1, 1], [1, 0, 0], [1, 1, 1]],
+            },
+            Shape {
+                index: 5,
+                shape: [[1, 1, 1], [0, 1, 0], [1, 1, 1]],
+            },
+        ]
     }
 
     #[test]
@@ -194,14 +221,9 @@ mod test_regions {
         let shapes = example_shapes();
         assert_eq!(region.can_fit_n(&shapes[..]), 0);
     }
-
 }
 
-
-
 // TODO: define rotate/flip functions, overlaps?
-
-
 
 fn p2(_raw_data: &str) -> ResultType {
     0
