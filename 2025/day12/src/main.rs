@@ -74,6 +74,42 @@ impl From<&str> for Shape {
     }
 }
 
+impl Shape {
+    fn rotated(&self) -> Shape {
+        let mut rotated_shape = [[0usize; 3]; 3];
+
+        // rotate 90 degree clockwise
+        // [1,2,3]
+        // [4,5,6]
+        // [7,8,9]
+        //   ------>|
+        //          v
+        // [7,4,1]
+        // [8,5,2]
+        // [9,6,3]
+        // row 0 becomes col 2
+        // row 1 becomes col 1
+        // row 2 becomes col 0
+
+        rotated_shape[0][2] = self.shape[0][0];
+        rotated_shape[1][2] = self.shape[0][1];
+        rotated_shape[2][2] = self.shape[0][2];
+
+        rotated_shape[0][1] = self.shape[1][0];
+        rotated_shape[1][1] = self.shape[1][1];
+        rotated_shape[2][1] = self.shape[1][2];
+
+        rotated_shape[0][0] = self.shape[2][0];
+        rotated_shape[1][0] = self.shape[2][1];
+        rotated_shape[2][0] = self.shape[2][2];
+
+        Shape {
+            index: self.index,
+            shape: rotated_shape,
+        }
+    }
+}
+
 #[cfg(test)]
 mod test_shapes {
     use super::*;
@@ -91,6 +127,37 @@ mod test_shapes {
         let none: Shape = "2:\n...\n...\n...".into();
         assert_eq!(none.shape, [[0, 0, 0], [0, 0, 0], [0, 0, 0]]);
         assert_eq!(none.index, 2);
+    }
+
+    #[test]
+    fn test_rotation() {
+        let shape = Shape {
+            index: 0,
+            shape: [[1, 1, 0], [1, 0, 1], [0, 1, 0]],
+        };
+        let rotated = Shape {
+            index: 0,
+            shape: [[0, 1, 1], [1, 0, 1], [0, 1, 0]],
+        };
+        assert_eq!(rotated.shape, shape.rotated().shape);
+
+        let rotated = Shape {
+            index: 0,
+            shape: [[0, 1, 0], [1, 0, 1], [0, 1, 1]],
+        };
+        assert_eq!(rotated.shape, shape.rotated().rotated().shape);
+
+        let rotated = Shape {
+            index: 0,
+            shape: [[0, 1, 0], [1, 0, 1], [1, 1, 0]],
+        };
+        assert_eq!(rotated.shape, shape.rotated().rotated().rotated().shape);
+
+        // 4 90 degree turns is an identity function
+        assert_eq!(
+            shape.shape,
+            shape.rotated().rotated().rotated().rotated().shape
+        );
     }
 }
 
