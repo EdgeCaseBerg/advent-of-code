@@ -2,6 +2,8 @@ use std::fs;
 use std::time::Instant;
 use std::collections::{HashSet, VecDeque};
 
+mod icub3;
+use icub3::Matrix;
 
 
 fn main() {
@@ -186,12 +188,57 @@ fn fewest_presses_with_joltage(buttons: Vec<Vec<u8>>, jolt_goal: Vec<usize>) -> 
         }
     }
 
+    /* For checking, this code will work. */
+    solit(buttons.clone(), jolt_goal.clone());
+
     // we'll get back how many presses of each button needs to happen
     // so the total presses is just heir sum
     let presses = gauss_it_up(matrix, buttons.len());
     presses.iter().sum()
 }
 
+fn solit(buttons: Vec<Vec<u8>>, jolt_goal: Vec<usize>) -> usize {
+    let height = jolt_goal.len();
+    let width = 1 + buttons.len(); // 1 + because it's a + b = c and we need space for c in the matrix.
+    let mut matrix: Vec<Vec<f64>> = Vec::new();
+    for _ in 0..height {
+        let row = vec![0f64; width];
+        matrix.push(row);
+    }
+
+    for (r, coefficient) in jolt_goal.clone().into_iter().enumerate() {
+        matrix[r][width - 1] = coefficient as f64;
+    }
+
+    for b in 0..buttons.len() {
+        let button = &buttons[b];
+        for (c, affects) in button.iter().enumerate() {
+            if *affects == 1  {
+                matrix[c][b] = 1.0;
+            }
+        }
+    }
+
+    let mut m = Matrix {
+        data: matrix.clone(),
+        rows: height,
+        cols: width - 1,
+        dependents: Vec::new(),
+        independents: Vec::new(),
+    };
+
+    m.gaussian_elimination();
+    
+    let max = jolt_goal.clone().iter().max().unwrap() + 1;
+    let mut min = usize::MAX;
+    let mut values = vec![0; m.independents.len()];
+
+
+    icub3::dfs(&m, 0, &mut values, &mut min, max);
+    println!("SOLUTION HERE {:?}", values);
+
+    min
+}
 fn gauss_it_up(matrix: Vec<Vec<f64>>, variable_count: usize) -> Vec<usize> {
     /* Matrices are hard. I kind of feel like grabbing a library to do this sort
      * of thing would PROBABLY be the better option here. But eh. Let's see if we
