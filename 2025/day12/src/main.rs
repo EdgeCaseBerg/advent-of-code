@@ -22,6 +22,8 @@ fn p1(raw_data: &str) -> ResultType {
     let shapes: Vec<Shape> = raw_data.split("\n\n").take(6).map(Shape::from).collect();
     println!("{:?}", shapes);
     // How many regions can fit the presents listed?
+    let regions: Vec<Region> = raw_data.lines().skip_while(|line| !line.contains("x")).map(Region::from).collect();
+    println!("{:?}", regions);
     0
 }
 
@@ -85,6 +87,7 @@ mod test_shapes {
 
 }
 
+#[derive(Debug)]
 struct Region {
     width: u8,
     height: u8,
