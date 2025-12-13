@@ -65,7 +65,7 @@ impl From<&str> for Shape {
 }
 
 #[cfg(test)]
-mod tests {
+mod test_shapes {
     use super::*;
 
     #[test]
@@ -90,6 +90,50 @@ struct Region {
     height: u8,
     quantity_to_fit_per_shape: [usize; 6]
 }
+
+impl From<&str> for Region {
+    fn from(string: &str) -> Region {
+        let (sizing, numbers) = string.split_once(":").unwrap();
+        let (width, height) = sizing.split_once("x").unwrap();
+
+        let mut counts = [0usize; 6];
+        let numbers = numbers
+            .split_whitespace()
+            .map(|n| n.parse().unwrap())
+            .take(6)
+            .enumerate();
+        for (i, n) in numbers {
+            counts[i] = n;
+        }
+
+        Region {
+            width: width.parse().unwrap(),
+            height: height.parse().unwrap(),
+            quantity_to_fit_per_shape: counts
+        }
+    }
+}
+
+#[cfg(test)]
+mod test_regions {
+    use super::*;
+
+    #[test]
+    fn test_parse() {
+        let region: Region = "40x42: 38 37 45 42 54 41".into();
+        assert_eq!(region.width, 40);
+        assert_eq!(region.height, 42);
+        assert_eq!(region.quantity_to_fit_per_shape, [38,37,45,42,54,41]);
+
+        let region: Region = "4x4: 38 37 45 42 54 41".into();
+        assert_eq!(region.width, 4);
+        assert_eq!(region.height, 4);
+        assert_eq!(region.quantity_to_fit_per_shape, [38,37,45,42,54,41]);
+    }
+
+}
+
+
 
 // TODO: define rotate/flip functions, overlaps?
 
