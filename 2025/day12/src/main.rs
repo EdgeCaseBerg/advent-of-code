@@ -20,11 +20,16 @@ fn main() {
 type ResultType = i64;
 fn p1(raw_data: &str) -> ResultType {
     let shapes: Vec<Shape> = raw_data.split("\n\n").take(6).map(Shape::from).collect();
-    println!("{:?}", shapes);
-    // How many regions can fit the presents listed?
     let regions: Vec<Region> = raw_data.lines().skip_while(|line| !line.contains("x")).map(Region::from).collect();
-    println!("{:?}", regions);
-    0
+
+    let mut regions_able_to_fit_all_presents = 0;
+    for region in regions {
+        if region.can_fit(&shapes[..]) {
+            regions_able_to_fit_all_presents += 1;
+        }
+    }
+        
+    regions_able_to_fit_all_presents
 }
 
 #[derive(Debug)]
@@ -114,6 +119,17 @@ impl From<&str> for Region {
             height: height.parse().unwrap(),
             quantity_to_fit_per_shape: counts
         }
+    }
+}
+
+impl Region {
+    fn can_fit(&self, regions: &[Shape]) -> bool {
+        self.can_fit_n(regions) != 0
+    }
+
+    fn can_fit_n(&self, regions: &[Shape]) -> usize {
+        // can_fit_n so that we can more easily test the example cases
+        0
     }
 }
 
