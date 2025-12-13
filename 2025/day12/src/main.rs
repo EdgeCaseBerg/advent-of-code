@@ -131,25 +131,46 @@ mod test_shapes {
 
     #[test]
     fn test_rotation() {
+        #[rustfmt_skip]
         let shape = Shape {
             index: 0,
-            shape: [[1, 1, 0], [1, 0, 1], [0, 1, 0]],
+            shape: [
+                [1, 1, 0], 
+                [1, 0, 1], 
+                [0, 1, 0],
+            ],
         };
+
+        #[rustfmt_skip]
         let rotated = Shape {
             index: 0,
-            shape: [[0, 1, 1], [1, 0, 1], [0, 1, 0]],
+            shape: [
+                [0, 1, 1], 
+                [1, 0, 1], 
+                [0, 1, 0],
+            ],
         };
         assert_eq!(rotated.shape, shape.rotated().shape);
 
+        #[rustfmt_skip]
         let rotated = Shape {
             index: 0,
-            shape: [[0, 1, 0], [1, 0, 1], [0, 1, 1]],
+            shape: [
+                [0, 1, 0], 
+                [1, 0, 1], 
+                [0, 1, 1],
+            ],
         };
         assert_eq!(rotated.shape, shape.rotated().rotated().shape);
 
+        #[rustfmt_skip]
         let rotated = Shape {
             index: 0,
-            shape: [[0, 1, 0], [1, 0, 1], [1, 1, 0]],
+            shape: [
+                [0, 1, 0], 
+                [1, 0, 1], 
+                [1, 1, 0],
+            ],
         };
         assert_eq!(rotated.shape, shape.rotated().rotated().rotated().shape);
 
