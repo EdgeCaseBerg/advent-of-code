@@ -131,7 +131,7 @@ mod test_shapes {
 
     #[test]
     fn test_rotation() {
-        #[rustfmt_skip]
+        #[rustfmt::skip]
         let shape = Shape {
             index: 0,
             shape: [
@@ -141,7 +141,7 @@ mod test_shapes {
             ],
         };
 
-        #[rustfmt_skip]
+        #[rustfmt::skip]
         let rotated = Shape {
             index: 0,
             shape: [
@@ -152,7 +152,7 @@ mod test_shapes {
         };
         assert_eq!(rotated.shape, shape.rotated().shape);
 
-        #[rustfmt_skip]
+        #[rustfmt::skip]
         let rotated = Shape {
             index: 0,
             shape: [
@@ -163,7 +163,7 @@ mod test_shapes {
         };
         assert_eq!(rotated.shape, shape.rotated().rotated().shape);
 
-        #[rustfmt_skip]
+        #[rustfmt::skip]
         let rotated = Shape {
             index: 0,
             shape: [
@@ -220,6 +220,10 @@ impl Region {
     fn can_fit_n(&self, regions: &[Shape]) -> usize {
         // can_fit_n so that we can more easily test the example cases
         0
+    }
+
+    fn shapes_for_region<'a>(&self, regions: &'a [Shape]) -> &'a [Shape] {
+        regions
     }
 }
 
