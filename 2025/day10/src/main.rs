@@ -173,7 +173,7 @@ fn fewest_presses_with_joltage(buttons: Vec<Vec<u8>>, jolt_goal: Vec<usize>) -> 
         matrix.push(row);
     }
 
-    for (r, coefficient) in jolt_goal.into_iter().enumerate() {
+    for (r, coefficient) in jolt_goal.clone().into_iter().enumerate() {
         matrix[r][width - 1] = coefficient as f64;
     }
 
@@ -342,7 +342,7 @@ fn solve_for_free_variables(
 
     // max free variable = max RHS, capped at something small-ish
     let max_target: f64 = normalized.iter().fold(0.0, |acc, row| acc.max(row[joltage_column]));
-    let max_free_variable_value = max_target.floor().min(501.0); // 100 was too little, 500 seems ok.
+    let max_free_variable_value = 501.0; // 100 was too little, 500 seems ok.
 
     let mut current_solution = vec![0usize; variable_count];
     let mut min_sum_found = usize::MAX;
@@ -398,17 +398,17 @@ fn enumerate_free_vars(
             for c in 0..variable_count {
                 if c != col {
                     let coeff = normalized[r][c];
-                    if coeff.abs() > 1e-4 {
+                    if coeff.abs() > 1e-9 {
                         value -= coeff * sol[c] as f64;
                     }
                 }
             }
 
-            let rounded = value.round();
-            if (value - rounded).abs() > 1e-4 {
+            if value < -(1e-9) {
                 return; // invalid
             }
-            if rounded < 0.0 {
+            let rounded = value.round();
+            if (value - rounded).abs() > 1e-9 {
                 return; // invalid
             }
             sol[col] = rounded as usize;
