@@ -150,6 +150,51 @@ mod test_regions {
         assert_eq!(region.quantity_to_fit_per_shape, [38,37,45,42,54,41]);
     }
 
+    fn example_regions() -> [Region; 3] {
+        [
+            Region { 
+                width: 4, 
+                height: 4, 
+                quantity_to_fit_per_shape: [0, 0, 0, 0, 2, 0] 
+            },
+            Region { 
+                width: 12, 
+                height: 5, 
+                quantity_to_fit_per_shape: [1, 0, 1, 0, 2, 2]
+            }, 
+            Region {
+                width: 12,
+                height: 5,
+                quantity_to_fit_per_shape: [1, 0, 1, 0, 3, 2] 
+            }
+        ]
+    }
+
+    fn example_shapes() -> [Shape; 6] {
+        [Shape { index: 0, shape: [[1, 1, 1], [1, 1, 0], [1, 1, 0]] }, Shape { index: 1, shape: [[1, 1, 1], [1, 1, 0], [0, 1, 1]] }, Shape { index: 2, shape: [[0, 1, 1], [1, 1, 1], [1, 1, 0]] }, Shape { index: 3, shape: [[1, 1, 0], [1, 1, 1], [1, 1, 0]] }, Shape { index: 4, shape: [[1, 1, 1], [1, 0, 0], [1, 1, 1]] }, Shape { index: 5, shape: [[1, 1, 1], [0, 1, 0], [1, 1, 1]] }]
+    }
+
+    #[test]
+    fn test_region_1_example() {
+        let region = &example_regions()[0];
+        let shapes = example_shapes();
+        assert_eq!(region.can_fit_n(&shapes[..]), 2);
+    }
+
+    #[test]
+    fn test_region_2_example() {
+        let region = &example_regions()[1];
+        let shapes = example_shapes();
+        assert_eq!(region.can_fit_n(&shapes[..]), 5);
+    }
+
+    #[test]
+    fn test_region_3_example() {
+        let region = &example_regions()[2];
+        let shapes = example_shapes();
+        assert_eq!(region.can_fit_n(&shapes[..]), 0);
+    }
+
 }
 
 
