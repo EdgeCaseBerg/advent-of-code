@@ -17,9 +17,11 @@ fn main() {
     println!("Took: {:?}", time);
 }
 
-
 type ResultType = i64;
-fn p1(_raw_data: &str) -> ResultType {
+fn p1(raw_data: &str) -> ResultType {
+    let shapes: Vec<Shape> = raw_data.split("\n\n").take(6).map(Shape::from).collect();
+    println!("{:?}", shapes);
+    // How many regions can fit the presents listed?
     0
 }
 
@@ -30,6 +32,7 @@ struct Shape {
 }
 
 impl From<&str> for Shape {
+    // Input is of the form, index:\n...\n###\n.... where # and . indicate shape or not
     fn from(string: &str) -> Shape {
 
         // Blog note: don't forget to use ! in front of line.is_empty 
