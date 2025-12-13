@@ -29,11 +29,19 @@ struct Shape {
     shape: [[usize; 3]; 3]
 }
 
-impl From<(usize, &str)> for Shape {
-    fn from(tuple: (usize, &str)) -> Shape {
-        let (idx, string) = tuple;
+impl From<&str> for Shape {
+    fn from(string: &str) -> Shape {
+
+        // Blog note: don't forget to use ! in front of line.is_empty 
+        let mut lines = string
+            .lines()
+            .take_while(|line| !line.is_empty())
+            .enumerate();
+
+        let idx = lines.next().unwrap().1.split_once(":").unwrap().0;
+
         let mut s = Shape {
-            index: idx as u8,
+            index: idx.parse().unwrap(),
             shape: [
                 [0, 0, 0],
                 [0, 0, 0],
@@ -41,15 +49,9 @@ impl From<(usize, &str)> for Shape {
             ]
         };
 
-        // Blog note: don't forget to use ! in front of line.is_empty 
-        let lines = string
-            .lines()
-            .take_while(|line| !line.is_empty())
-            .enumerate();
-
         for (row, line) in lines {
             for c in 0..3 {
-                s.shape[row][c] = if let Some(ch) = line.chars().nth(c) {
+                s.shape[row - 1][c] = if let Some(ch) = line.chars().nth(c) {
                     if ch == '#' { 1 } else { 0 }
                 } else { 0 }
             }
@@ -65,14 +67,17 @@ mod tests {
 
     #[test]
     fn test_parse() {
-        let full: Shape = (0, "###\n###\n###").into();
+        let full: Shape = "0:\n###\n###\n###".into();
         assert_eq!(full.shape, [[1,1,1],[1,1,1],[1,1,1]]);
+        assert_eq!(full.index, 0);
 
-        let partial: Shape = (0, ".##\n#.#\n##.").into();
+        let partial: Shape = "1:\n.##\n#.#\n##.".into();
         assert_eq!(partial.shape, [[0,1,1],[1,0,1],[1,1,0]]);
+        assert_eq!(partial.index, 1);
 
-        let none: Shape = (0, "...\n...\n...").into();
+        let none: Shape = "2:\n...\n...\n...".into();
         assert_eq!(none.shape, [[0,0,0],[0,0,0],[0,0,0]]);
+        assert_eq!(none.index, 2);
     }
 
 }
