@@ -29,10 +29,11 @@ struct Shape {
     shape: [[usize; 3]; 3]
 }
 
-impl Shape {
-    fn from(string: &str, idx: u8) -> Shape {
+impl From<(usize, &str)> for Shape {
+    fn from(tuple: (usize, &str)) -> Shape {
+        let (idx, string) = tuple;
         let mut s = Shape {
-            index: idx,
+            index: idx as u8,
             shape: [
                 [0, 0, 0],
                 [0, 0, 0],
@@ -64,13 +65,13 @@ mod tests {
 
     #[test]
     fn test_parse() {
-        let full = Shape::from("###\n###\n###", 0);
+        let full: Shape = (0, "###\n###\n###").into();
         assert_eq!(full.shape, [[1,1,1],[1,1,1],[1,1,1]]);
 
-        let partial = Shape::from(".##\n#.#\n##.", 0);
+        let partial: Shape = (0, ".##\n#.#\n##.").into();
         assert_eq!(partial.shape, [[0,1,1],[1,0,1],[1,1,0]]);
 
-        let none = Shape::from("...\n...\n...", 0);
+        let none: Shape = (0, "...\n...\n...").into();
         assert_eq!(none.shape, [[0,0,0],[0,0,0],[0,0,0]]);
     }
 
