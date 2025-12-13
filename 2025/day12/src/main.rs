@@ -17,9 +17,15 @@ fn main() {
     println!("Took: {:?}", time);
 }
 
+const NUM_MACHINES: usize = 6;
+
 type ResultType = i64;
 fn p1(raw_data: &str) -> ResultType {
-    let shapes: Vec<Shape> = raw_data.split("\n\n").take(6).map(Shape::from).collect();
+    let shapes: Vec<Shape> = raw_data
+        .split("\n\n")
+        .take(NUM_MACHINES)
+        .map(Shape::from)
+        .collect();
     let regions: Vec<Region> = raw_data
         .lines()
         .skip_while(|line| !line.contains("x"))
@@ -38,7 +44,7 @@ fn p1(raw_data: &str) -> ResultType {
     regions_able_to_fit_all_presents
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 struct Shape {
     index: u8,
     shape: [[usize; 3]; 3],
@@ -186,7 +192,7 @@ mod test_shapes {
 struct Region {
     width: u8,
     height: u8,
-    quantity_to_fit_per_shape: [usize; 6],
+    quantity_to_fit_per_shape: [usize; NUM_MACHINES],
 }
 
 impl From<&str> for Region {
@@ -194,11 +200,11 @@ impl From<&str> for Region {
         let (sizing, numbers) = string.split_once(":").unwrap();
         let (width, height) = sizing.split_once("x").unwrap();
 
-        let mut counts = [0usize; 6];
+        let mut counts = [0usize; NUM_MACHINES];
         let numbers = numbers
             .split_whitespace()
             .map(|n| n.parse().unwrap())
-            .take(6)
+            .take(NUM_MACHINES)
             .enumerate();
         for (i, n) in numbers {
             counts[i] = n;
@@ -219,11 +225,20 @@ impl Region {
 
     fn can_fit_n(&self, regions: &[Shape]) -> usize {
         // can_fit_n so that we can more easily test the example cases
+        let _shapes_to_fit = self.shapes_for_region(regions);
         0
     }
 
-    fn shapes_for_region<'a>(&self, regions: &'a [Shape]) -> &'a [Shape] {
-        regions
+    fn shapes_for_region(&self, regions: &[Shape]) -> Vec<Shape> {
+        let mut shapes = Vec::new();
+        for i in 0..self.quantity_to_fit_per_shape.len() {
+            let count = self.quantity_to_fit_per_shape[i];
+            let shape = regions[i].clone();
+            for _ in 0..=count {
+                shapes.push(shape);
+            }
+        }
+        shapes
     }
 }
 
