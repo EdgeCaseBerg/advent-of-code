@@ -9,12 +9,6 @@ fn main() {
     let time = i.elapsed();
     println!("{:?}", result);
     println!("Took: {:?}", time);
-
-    let i = Instant::now();
-    let result = p2(raw_data);
-    let time = i.elapsed();
-    println!("{:?}", result);
-    println!("Took: {:?}", time);
 }
 
 const NUM_MACHINES: usize = 6;
