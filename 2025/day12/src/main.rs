@@ -243,22 +243,27 @@ impl From<&str> for Region {
 }
 
 impl Region {
-    fn can_fit(&self, regions: &[Shape]) -> bool {
-        self.can_fit_n(regions) != 0
+    fn can_fit(&self, shapes: &[Shape]) -> bool {
+        self.can_fit_n(shapes) != 0
     }
 
-    fn can_fit_n(&self, regions: &[Shape]) -> usize {
+    fn can_fit_n(&self, shapes: &[Shape]) -> usize {
         // can_fit_n so that we can more easily test the example cases
-        let _shapes_to_fit = self.shapes_for_region(regions);
+        let shapes_to_fit = self.shapes_for_region(shapes);
+        let total_shape_area = shapes_to_fit.iter().fold(0, |a, s| a + s.area());
+        if total_shape_area > self.width as usize * self.height as usize {
+            // Ok, so this isn't TECHNICALLY true, but it does early return it
+            return 0;
+        }
         0
     }
 
-    fn shapes_for_region(&self, regions: &[Shape]) -> Vec<Shape> {
+    fn shapes_for_region(&self, shape_definitions: &[Shape]) -> Vec<Shape> {
         let mut shapes = Vec::new();
         for i in 0..self.quantity_to_fit_per_shape.len() {
             let count = self.quantity_to_fit_per_shape[i];
-            let shape = regions[i].clone();
-            for _ in 0..=count {
+            for _ in 0..count {
+                let shape = shape_definitions[i].clone();
                 shapes.push(shape);
             }
         }
