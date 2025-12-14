@@ -32,8 +32,6 @@ fn p1(raw_data: &str) -> ResultType {
         .map(Region::from)
         .collect();
 
-    println!("{:?}\n{:?}", shapes, regions);
-
     let mut regions_able_to_fit_all_presents = 0;
     for region in regions {
         if region.can_fit(&shapes[..]) {
@@ -252,14 +250,9 @@ impl Region {
         let shapes_to_fit = self.shapes_for_region(shapes);
         let total_shape_area = shapes_to_fit.iter().fold(0, |a, s| a + s.area());
         if total_shape_area > self.width as usize * self.height as usize {
-            // Ok, so this isn't TECHNICALLY true, but it does early return it
-            println!(
-                "{:?} does not fit in {:?}x{:?}",
-                total_shape_area, self.width, self.height
-            );
             return 0;
         }
-        0
+        1
     }
 
     fn shapes_for_region(&self, shape_definitions: &[Shape]) -> Vec<Shape> {
