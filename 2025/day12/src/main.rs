@@ -114,6 +114,16 @@ impl Shape {
             shape: rotated_shape,
         }
     }
+
+    fn area(&self) -> usize {
+        let mut a = 0;
+        for r in 0..3 {
+            for c in 0..3 {
+                a += self.shape[r][c];
+            }
+        }
+        a
+    }
 }
 
 #[cfg(test)]
@@ -185,6 +195,20 @@ mod test_shapes {
             shape.shape,
             shape.rotated().rotated().rotated().rotated().shape
         );
+    }
+
+    #[test]
+    fn test_area() {
+        #[rustfmt::skip]
+        let shape = Shape {
+            index: 0,
+            shape: [
+                [1, 1, 0],
+                [1, 1, 1],
+                [0, 1, 0],
+            ],
+        };
+        assert_eq!(shape.area(), 6);
     }
 }
 
